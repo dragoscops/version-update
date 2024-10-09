@@ -1,0 +1,61 @@
+name: version-update-action
+description: Github Action for Updating Versions
+
+inputs:
+  workspaces:
+    description: Paths to the workspaces (separated by comma)
+    default: "."
+  version_files:
+    description: Version files to look for in each workspace (separated by comma)
+    default: package.json
+  no_pr:
+    description: Use pull request to increase the version
+
+runs:
+  using: "composite"
+  steps:
+    - name: Git Info
+      id: git-info
+      shell: bash
+      run: |
+        echo "commit_message=$(git log -1 --no-merges --pretty=format:%B)" >> $GITHUB_OUTPUT
+        echo "pr_message=$(git log -1 --pretty=format:%B)" >> $GITHUB_OUTPUT
+
+    - name: Commands Warmup
+      id: git-info
+      shell: bash
+      run: |
+        # for release-it, will not use npm push, git tag and git push 
+        RELEASEIT="npx release-it --no-npm --git.tag=false --git.push=false"
+
+        echo "RELEASEIT=\"$RELEASEIT\"" >> $GITHUB_OUTPUT
+
+    - name: Major Arguments
+      if: ${{ startsWith(steps.git-info.outputs.commit_message, 'feat!:') || startsWith(steps.git-info.outputs.commit_message, 'feature!:') || contains(steps.git-info.outputs.commit_message, 'BREAKING CHANGE') }}
+      shell: bash
+      run: |
+        echo "RELEASEIT=\"${{ env.RELEASEIT }} --increment=major\"" >> $GITHUB_ENV
+
+    - name: Major Arguments
+      if: ${{ startsWith(steps.git-info.outputs.commit_message, 'feat:') || startsWith(steps.git-info.outputs.commit_message, 'feature:') }}
+      shell: bash
+      run: |
+        echo "RELEASEIT=\"${{ env.RELEASEIT }} --increment=minor\"" >> $GITHUB_ENV
+
+    - name: Major Arguments
+      if: ${{ startsWith(steps.git-info.outputs.commit_message, 'fix:') }}
+      shell: bash
+      run: |
+        echo "RELEASEIT=\"${{ env.RELEASEIT }} --increment=patch\"" >> $GITHUB_ENV
+
+    - name: Major Arguments
+      if: ${{ contains(steps.git-info.outputs.commit_message, '(rc') || contains(steps.git-info.outputs.commit_message, '(release-candidate') }}
+      shell: bash
+      run: |
+        release_id=$(echo "${{ steps.git-info.outputs.commit_message }}" | grep -oP '\((rc|release-candidate)(?::\K[^)]*|)\)' | sed 's/^$/rc/')
+        echo "RELEASEIT=\"${{ env.RELEASEIT }} --preReleaseId=$release_id\"" >> $GITHUB_ENV
+
+    - name: Debug Commands
+      shell: bash
+      run: |
+        echo '${{ toJSON(env) }}' | jq -r '.'
