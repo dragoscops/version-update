@@ -80,9 +80,12 @@ runs:
         IFS=',' read -r -a version_file_array <<< "$version_files"
 
         for workspace in "${workspace_array[@]}"; do
+          echo "testing workspace $workspace" >> $GITHUB_LOG
           cd $workspace
-          for b in "${version_file_array[@]}"; do
+          for version_file in "${version_file_array[@]}"; do
+            echo "testing version file $version_file" >> $GITHUB_LOG
             if [[ -f "$version_file" && "$version_file" == "package.json" ]]; then
+              echo "increasing version in $version_file" >> $GITHUB_LOG
               ${{ env.RELEASEIT }}
             fi
           done
