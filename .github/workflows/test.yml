@@ -35,7 +35,7 @@ jobs:
 
       - name: Run Version Update Action
         id: version_update_action
-        uses: ./
+        uses: ${{ github.repository }}
         with:
           workspaces: "test/node"
           dry_run: true
