@@ -41,7 +41,7 @@ jobs:
       - name: Run Version Update Action
         if: ${{ startsWith(steps.git_info.outputs.commit_message, 'feat:') && contains(steps.git_info.outpus.commit_message, 'breaking change') }}
         id: version_update_action
-        uses: .
+        uses: dragoscirjan/version-update-action@main
         with:
           workspaces: "test/node"
           dry_run: true
