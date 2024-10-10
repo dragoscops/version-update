@@ -58,9 +58,26 @@ runs:
           RELEASEIT="${RELEASE} --preReleaseId=${{ steps.version_info.outputs.pre_release_id }}"
         fi
 
-        echo "RELEASEIT=\"$RELEASEIT\"" >> $GITHUB_OUTPUT
+        echo "RELEASEIT=\"$RELEASEIT\"" >> $GITHUB_ENV
 
     - name: Debug Commands
       shell: bash
       run: |
         echo env=$(echo '${{ toJSON(env) }}' | jq -r '.')
+
+    - name: Increase Versions
+      shell: bash
+      run: |
+        workspaces="${{ inputs.workspaces }}"
+        version_files="${{ inputs.version_files }}"
+
+        IFS=',' read -r -a workspace_array <<< "$workspaces"
+        IFS=',' read -r -a version_file_array <<< "$version_files"
+
+        for workspace in "${workspace_array[@]}"; do
+          cd $workspace
+          for b in "${version_file_array[@]}"; do
+            ls -la
+          done
+          cd ${{ github.workspace }}
+        done
