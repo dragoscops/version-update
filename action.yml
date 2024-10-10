@@ -51,8 +51,13 @@ runs:
       id: git-info
       shell: bash
       run: |
+        command=""
+        if [[ -n "${{ inputs.dry_run }}" ]]; then
+          command="echo"
+        fi
+
         # for release-it, will not use npm push, git tag and git push 
-        RELEASEIT="npx release-it --no-npm --git.tag=false --git.push=false"
+        RELEASEIT="$command npx release-it --no-npm --git.tag=false --git.push=false"
         RELEASEIT="${RELEASEIT} --incremnet=${{ steps.version_info.outputs.increment }}"
         if [[ -n "${{ steps.version_info.outputs.pre_release_id }}" ]]; then
           RELEASEIT="${RELEASE} --preReleaseId=${{ steps.version_info.outputs.pre_release_id }}"
@@ -68,20 +73,17 @@ runs:
     - name: Increase Versions
       shell: bash
       run: |
-        command="bash -c"
-        if [[ -n "${{ inputs.dry_run }}" ]]; then
-          command="echo"
-        fi
-
         workspaces="${{ inputs.workspaces }}"
         version_files="${{ inputs.version_files }}"
+
         IFS=',' read -r -a workspace_array <<< "$workspaces"
         IFS=',' read -r -a version_file_array <<< "$version_files"
+
         for workspace in "${workspace_array[@]}"; do
           cd $workspace
           for b in "${version_file_array[@]}"; do
             if [[ -f "$version_file" && "$version_file" == "package.json" ]]; then
-              $command "${{ env.RELEASEIT }}"
+              ${{ env.RELEASEIT }}
             fi
           done
           cd ${{ github.workspace }}
