@@ -45,7 +45,7 @@ runs:
           pre_release_id=$(echo "$commit_message" | grep -oP '\((rc|release-candidate)(?::\K[^)]*|)\)' | sed 's/^$/rc/')
         fi
         echo "pre_release_id=\"${pre_release_id}\""
-        echo "pre_release_id=\"${pre_release_id}\"" >> $GITJHUB_OUTPUT
+        echo "pre_release_id=\"${pre_release_id}\"" >> $GITHUB_OUTPUT
 
     - name: Commands Warmup
       id: git-info
