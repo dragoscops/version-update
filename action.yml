@@ -85,7 +85,7 @@ runs:
           for version_file in "${version_file_array[@]}"; do
             echo "- testing version file $version_file"
             if [[ -f "$version_file" && "$version_file" == "package.json" ]]; then
-              echo "::warning::increasing version in $version_file"
+              echo "increasing version in $version_file"
               ${{ env.RELEASEIT }}
             fi
           done
