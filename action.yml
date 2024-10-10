@@ -81,7 +81,7 @@ runs:
           cd $workspace
           for b in "${version_file_array[@]}"; do
             if [[ -f "$version_file" && "$version_file" == "package.json" ]]; then
-              $command "${{ env.RELEASEID }}"
+              $command "${{ env.RELEASEIT }}"
             fi
           done
           cd ${{ github.workspace }}
