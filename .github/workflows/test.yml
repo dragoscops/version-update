@@ -2,6 +2,10 @@ name: Test Version Update Action
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   test-version-update-action:
