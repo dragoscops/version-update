@@ -22,18 +22,24 @@ jobs:
           node-version: "18"
 
       - name: Set up Git
+        id: git_info
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+          echo "commit_message=$(git log -1 --no-merges --pretty=format:%B)" >> $GITHUB_OUTPUT
+          echo "pr_message=$(git log -1 --pretty=format:%B)" >> $GITHUB_OUTPUT
+
       - name: Create Test Commit
+        if: ${{ ! startsWith(steps.git_info.outputs.commit_message, 'feat:') && ! contains(steps.git_info.outpus.commit_message, 'breaking change') }}
         run: |
           date > ./test/node/.update
           git add ./test
           git commit -m "feat: Added a breaking change"
 
       - name: Run Version Update Action
+        if: ${{ startsWith(steps.git_info.outputs.commit_message, 'feat:') && contains(steps.git_info.outpus.commit_message, 'breaking change') }}
         id: version_update_action
         uses: ${{ github.repository }}
         with:
@@ -41,6 +47,7 @@ jobs:
           dry_run: true
 
       - name: Output Version Info
+        if: ${{ startsWith(steps.git_info.outputs.commit_message, 'feat:') && contains(steps.git_info.outpus.commit_message, 'breaking change') }}
         run: |
           echo "Increment: ${{ steps.version_update_action.outputs.increment }}"
           echo "Pre-release ID: ${{ steps.version_update_action.outputs.pre_release_id }}"
