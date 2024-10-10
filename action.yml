@@ -27,7 +27,7 @@ runs:
       id: version_info
       shell: bash
       run: |
-        commit_message=${{ steps.git_info.outputs.commit_message }}
+        commit_message="${{ steps.git_info.outputs.commit_message }}"
 
         increment=""
         if [[ "$commit_message" == "feat!:"* || "$commit_message" == "feature!:"* || "$commit_message" == *"BREAKING CHANGE"* ]]; then
