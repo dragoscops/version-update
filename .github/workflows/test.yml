@@ -29,8 +29,8 @@ jobs:
 
       - name: Create Test Commit
         run: |
-          echo "Test content" > test.txt
-          git add test.txt
+          date > ./test/node/.update
+          git ./test
           git commit -m "feat: Added a breaking change"
 
       - name: Run Version Update Action
