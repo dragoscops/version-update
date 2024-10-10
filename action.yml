@@ -10,16 +10,42 @@ inputs:
     default: package.json
   no_pr:
     description: Use pull request to increase the version
+  dry_run:
+    description: Do nothing. Will just print commands to run
 
 runs:
   using: "composite"
   steps:
     - name: Git Info
-      id: git-info
+      id: git_info
       shell: bash
       run: |
         echo "commit_message=$(git log -1 --no-merges --pretty=format:%B)" >> $GITHUB_OUTPUT
         echo "pr_message=$(git log -1 --pretty=format:%B)" >> $GITHUB_OUTPUT
+
+    - name: Version Info
+      id: version_info
+      shell: bash
+      run: |
+        commit_message=${{ steps.git_info.outputs.commit_message }}
+
+        increment=""
+        if [[ "$commit_message" == "feat!:"* || "$commit_message" == "feature!:"* || "$commit_message" == *"BREAKING CHANGE"* ]]; then
+          increment="major"
+        elif [[ "$commit_message" == "feat:"* || "$commit_message" == "feature:"* ]]; then
+          increment="minor"
+        elif [[ "$commit_message" == "fix:"* ]]; then
+          increment="patch"
+        fi
+        echo "increment=\"${increment}\""
+        echo "increment=\"${increment}\"" >> $GITHUB_OUTPUT
+
+        pre_release_id=""
+        if [[ "$commit_message" == "(rc"* || "$commit_message" == "(release-candidate"* ]]; then
+          pre_release_id=$(echo "$commit_message" | grep -oP '\((rc|release-candidate)(?::\K[^)]*|)\)' | sed 's/^$/rc/')
+        fi
+        echo "pre_release_id=\"${pre_release_id}\""
+        echo "pre_release_id=\"${pre_release_id}\"" >> $GITJHUB_OUTPUT
 
     - name: Commands Warmup
       id: git-info
@@ -27,35 +53,14 @@ runs:
       run: |
         # for release-it, will not use npm push, git tag and git push 
         RELEASEIT="npx release-it --no-npm --git.tag=false --git.push=false"
+        RELEASEIT="${RELEASEIT} --incremnet=${{ steps.version_info.outputs.increment }}"
+        if [[ -n "${{ steps.version_info.outputs.pre_release_id }}" ]]; then
+          RELEASEIT="${RELEASE} --preReleaseId=${{ steps.version_info.outputs.pre_release_id }}"
+        fi
 
         echo "RELEASEIT=\"$RELEASEIT\"" >> $GITHUB_OUTPUT
-
-    - name: Major Arguments
-      if: ${{ startsWith(steps.git-info.outputs.commit_message, 'feat!:') || startsWith(steps.git-info.outputs.commit_message, 'feature!:') || contains(steps.git-info.outputs.commit_message, 'BREAKING CHANGE') }}
-      shell: bash
-      run: |
-        echo "RELEASEIT=\"${{ env.RELEASEIT }} --increment=major\"" >> $GITHUB_ENV
-
-    - name: Major Arguments
-      if: ${{ startsWith(steps.git-info.outputs.commit_message, 'feat:') || startsWith(steps.git-info.outputs.commit_message, 'feature:') }}
-      shell: bash
-      run: |
-        echo "RELEASEIT=\"${{ env.RELEASEIT }} --increment=minor\"" >> $GITHUB_ENV
-
-    - name: Major Arguments
-      if: ${{ startsWith(steps.git-info.outputs.commit_message, 'fix:') }}
-      shell: bash
-      run: |
-        echo "RELEASEIT=\"${{ env.RELEASEIT }} --increment=patch\"" >> $GITHUB_ENV
-
-    - name: Major Arguments
-      if: ${{ contains(steps.git-info.outputs.commit_message, '(rc') || contains(steps.git-info.outputs.commit_message, '(release-candidate') }}
-      shell: bash
-      run: |
-        release_id=$(echo "${{ steps.git-info.outputs.commit_message }}" | grep -oP '\((rc|release-candidate)(?::\K[^)]*|)\)' | sed 's/^$/rc/')
-        echo "RELEASEIT=\"${{ env.RELEASEIT }} --preReleaseId=$release_id\"" >> $GITHUB_ENV
 
     - name: Debug Commands
       shell: bash
       run: |
-        echo '${{ toJSON(env) }}' | jq -r '.'
+        echo env=$(echo '${{ toJSON(env) }}' | jq -r '.')

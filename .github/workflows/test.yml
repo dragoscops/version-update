@@ -1,0 +1,42 @@
+name: Test Version Update Action
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-version-update-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history so git log works
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Create Test Commit
+        run: |
+          echo "Test content" > test.txt
+          git add test.txt
+          git commit -m "feat: Added a breaking change"
+
+      - name: Run Version Update Action
+        id: version_update_action
+        uses: ./
+        with:
+          workspaces: "test/node"
+          dry_run: true
+
+      - name: Output Version Info
+        run: |
+          echo "Increment: ${{ steps.version_update_action.outputs.increment }}"
+          echo "Pre-release ID: ${{ steps.version_update_action.outputs.pre_release_id }}"
