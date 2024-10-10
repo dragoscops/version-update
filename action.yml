@@ -92,3 +92,12 @@ runs:
           cd ${{ github.workspace }}
           echo "::endgroup::"
         done
+
+    - name: Collect versions for main tag
+      shell: bash
+      run: |
+        workspaces="${{ inputs.workspaces }}"
+        version_files="${{ inputs.version_files }}"
+
+        IFS=',' read -r -a workspace_array <<< "$workspaces"
+        IFS=',' read -r -a version_file_array <<< "$version_files"
