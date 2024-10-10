@@ -58,7 +58,7 @@ runs:
           RELEASEIT="${RELEASE} --preReleaseId=${{ steps.version_info.outputs.pre_release_id }}"
         fi
 
-        echo "RELEASEIT=\"$RELEASEIT\"" >> $GITHUB_ENV
+        echo "RELEASEIT=${RELEASEIT}" >> $GITHUB_ENV
 
     - name: Debug Commands
       shell: bash
