@@ -30,7 +30,7 @@ jobs:
       - name: Create Test Commit
         run: |
           date > ./test/node/.update
-          git ./test
+          git add ./test
           git commit -m "feat: Added a breaking change"
 
       - name: Run Version Update Action
