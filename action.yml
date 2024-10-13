@@ -131,6 +131,7 @@ runs:
       run: |
         echo '${{ steps.workspaces_info.outputs.changed }}' | jq -c '.' | while read ws; do
           if [[ -z "$ws" ]]; then continue; fi
+          echo "$ws"
           ws_path=$(echo "$ws" | jq -r '.path')
           ws_version_file=$(echo "$ws" | jq -r '.version_file')
           echo "::group::Increasing version for workspace $ws_path"
