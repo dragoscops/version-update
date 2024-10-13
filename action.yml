@@ -99,7 +99,7 @@ runs:
           echo "::endgroup::"
         done
 
-        versions_string=$(IFS=',' echo ${versions_array[*]})
+        IFS=',' versions_string="${versions_array[*]}"
         echo "versions=$versions_string"
         echo "versions=$versions_string" >> $GITHUB_OUTPUT
 
