@@ -40,7 +40,7 @@ jobs:
           if [[ -z "$last_tag" ]]; then
             last_tag=$(echo "HEAD~$(git rev-list --count HEAD)")
           fi
-          git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD
+          git diff --name-only "$last_tag" HEAD
 
       - name: Run Version Update Action (single project)
         id: version_update_action_sp
