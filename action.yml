@@ -28,7 +28,7 @@ runs:
         echo "last_pr_message=${last_pr_message}"
         echo "last_pr_message=${last_pr_message}" >> $GITHUB_OUTPUT
 
-        last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1 || echo "HEAD~$(git rev-list --count HEAD)"
+        last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1 || echo "HEAD~$(git rev-list --count HEAD)")
         echo "last_tag=${last_tag}"
         echo "last_tag=${last_tag}" >> $GITHUB_OUTPUT
 
