@@ -37,7 +37,7 @@ jobs:
           git commit -m "feat: Added a feature"
 
           last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1)
-          if [ -z "$last_tag"]; then
+          if [[ -z "$last_tag" ]]; then
             last_tag=$(echo "HEAD~$(git rev-list --count HEAD)")
           fi
           git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD
