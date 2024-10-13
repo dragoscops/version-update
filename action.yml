@@ -53,6 +53,9 @@ runs:
            version_files_array=("${version_files_array[@]:1}")
         fi
 
+        echo "workspaces_array=${workspaces_array[@]}"
+        echo "version_files_array=${version_files_array[@]}"
+
         for ((i=0; i<${#workspaces_array[@]}; i++)); do
           workspace=${workspaces_array[$i]}
           version_file=${version_files_array[$i]}
