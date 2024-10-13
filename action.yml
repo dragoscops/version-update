@@ -129,7 +129,7 @@ runs:
       if: ${{ steps.version_info.outputs.increment && steps.workspaces_info.outputs.changed != '[]' }}
       shell: bash
       run: |
-        echo '${{ steps.workspaces_info.outputs.changed }}' | jq -c '.' | while read ws; do
+        echo '${{ steps.workspaces_info.outputs.changed }}' | jq -c '.[]' | while read ws; do
           if [[ -z "$ws" ]]; then continue; fi
           echo "$ws"
           ws_path=$(echo "$ws" | jq -r '.path')
