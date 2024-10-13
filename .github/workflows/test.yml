@@ -10,6 +10,15 @@ on:
 jobs:
   test-version-update-action:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - title: single project
+            workspaces: test/node
+            version_files: package.json
+          - title: multi project
+            workspaces: test,test/node,test/node-2
+            version_files: VERSION,package.json,package.json
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -34,23 +43,10 @@ jobs:
           git add ./test
           git commit -m "feat: Added a feature"
 
-      - name: Run Version Update Action (single project)
+      - name: Run Version Update Action (${{ matrix.title }})
         id: version_update_action_sp
         uses: dragoscirjan/version-update-action@main
         with:
-          workspaces: "test/node"
-          dry_run: true
-
-      - name: Create Test Commit
-        run: |
-          date +%s > ./test/node/.update
-          git add ./test
-          git commit -m "fix: Added a fix"
-
-      - name: Run Version Update Action (multi project, one project changed)
-        id: version_update_action_mp
-        uses: dragoscirjan/version-update-action@main
-        with:
-          workspaces: "test,test/node,test/node-2"
-          version_files: VERSION,package.json,pacjage.json
+          workspaces: "${{ matrix.workspaces }}"
+          version_files: "${{ matrix.version_files }}"
           dry_run: true
