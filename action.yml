@@ -137,7 +137,7 @@ runs:
           cd $ws_path
           if [[ ! -f $ws_version_file ]]; then
             echo "::error::Missing ${ws_version_file} version file in workspace ${ws_path}"
-            exit -1
+            exit 1
           fi
 
           case $ws_version_file in
@@ -148,7 +148,7 @@ runs:
               ;;
             version|VERSION|version.txt|VERSION.txt)
               version=$(cat $ws_version_file)
-              if [[ -z "$version" ]]; version="0.0.0"; fi
+              if [[ -z "$version" ]]; then version="0.0.0"; fi
               ${{ env.RELEASEIT }} --pre-changelog "VERSION=$versioin" --post-changelog "echo $VERSION > $ws_version_file"
 
               echo "$ws_path workspace version increased to $(cat $ws_version_file)"
