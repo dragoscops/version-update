@@ -80,7 +80,7 @@ runs:
         changed_json=$(echo "$changed" | jq -c '.')
 
         echo "changed=${changed_json}"
-        echo "changed=\"${changed_json}\"" >> $GITHUB_OUTPUT
+        echo "changed=${changed_json}" >> $GITHUB_OUTPUT
 
     - name: Version Info
       id: version_info
@@ -96,8 +96,8 @@ runs:
         elif [[ "$last_commit_message" == "fix:"* ]]; then
           increment="patch"
         fi
-        echo "increment=\"${increment}\""
-        echo "increment=\"${increment}\"" >> $GITHUB_OUTPUT
+        echo "increment=${increment}"
+        echo "increment=${increment}" >> $GITHUB_OUTPUT
 
         pre_release_id=""
         if [[ "$last_commit_message" == "(rc"* || "$last_commit_message" == "(release-candidate"* ]]; then
