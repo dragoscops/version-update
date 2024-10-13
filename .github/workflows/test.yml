@@ -69,7 +69,7 @@ jobs:
           git commit -m "feat!: Added a breaking change"
 
       - name: Run Version Update Action (multi project)
-        id: version_update_action_mp
+        id: version_update_action_mp2
         uses: dragoscirjan/version-update-action@main
         with:
           workspaces: "test,test/node,test/node-2"
