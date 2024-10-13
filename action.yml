@@ -30,7 +30,8 @@ runs:
 
         last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1)
         if [[ -z "$last_tag" ]]; then
-          last_tag=$(echo "HEAD~$(git rev-list --count HEAD)")
+          # last_tag=$(echo "HEAD~$(git rev-list --count HEAD)")
+          last_tag=$(git rev-list --max-parents=0 HEAD)
         fi
         echo "last_tag=${last_tag}"
         echo "last_tag=${last_tag}" >> $GITHUB_OUTPUT
