@@ -38,20 +38,15 @@ jobs:
           git commit -m "feat: Added a breaking change"
 
       - name: Run Version Update Action (single project)
-        id: version_update_action
+        id: version_update_action_sp
         uses: dragoscirjan/version-update-action@main
         with:
           workspaces: "test/node"
           dry_run: true
 
       - name: Run Version Update Action (multi project)
-        id: version_update_action
+        id: version_update_action_mp
         uses: dragoscirjan/version-update-action@main
         with:
           workspaces: "test/node,test/node-2"
           dry_run: true
-
-      - name: Output Version Info
-        run: |
-          echo "Increment: ${{ steps.version_update_action.outputs.increment }}"
-          echo "Pre-release ID: ${{ steps.version_update_action.outputs.pre_release_id }}"
