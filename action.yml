@@ -20,7 +20,10 @@ runs:
       id: git_info
       shell: bash
       run: |
+        echo "commit_message=$(git log -1 --no-merges --pretty=format:%B)"
         echo "commit_message=$(git log -1 --no-merges --pretty=format:%B)" >> $GITHUB_OUTPUT
+
+        echo "pr_message=$(git log -1 --pretty=format:%B)"
         echo "pr_message=$(git log -1 --pretty=format:%B)" >> $GITHUB_OUTPUT
 
     - name: Version Info
@@ -48,7 +51,7 @@ runs:
         echo "pre_release_id=\"${pre_release_id}\"" >> $GITHUB_OUTPUT
 
     - name: Commands Warmup
-      id: git-info
+      id: commands_info
       shell: bash
       run: |
         command=""
@@ -103,15 +106,15 @@ runs:
         echo "versions=$versions_string"
         echo "versions=$versions_string" >> $GITHUB_OUTPUT
 
-    # - name: Create version branch
-    #   if: ${{ ! inputs.no_pr }}
-    #   shell: bash
-    #   run: |
-    #     version_branch="version_${{ steps.version_info.outputs.version }}"
-    #     git checkout -b $version_branch
-    #
-    #     git add .
-    #     git commit -am "chore: version merge ${{ steps.version_info.outputs.version }}"
-    #     git push origin $version_branch
-    #
-    #     gh
+    - name: Create version branch
+      if: ${{ ! inputs.no_pr && ! steps.git_info.outputs.pr_message }}
+      shell: bash
+      run: |
+        version_branch="version_${{ steps.version_info.outputs.version }}"
+        git checkout -b $version_branch
+
+        git add .
+        git commit -am "chore: version merge ${{ steps.version_info.outputs.version }}"
+        #git push origin $version_branch
+
+        #gh
