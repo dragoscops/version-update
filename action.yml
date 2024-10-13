@@ -61,7 +61,10 @@ runs:
           fi
         done
 
-        changed=$(echo "$changed" | jq -c '.')
+        changed_json=$(echo "$changed" | jq -c '.')
+
+        echo "changed=${changed_json}"
+        echo "changed=\"${changed_json}\"" >> $GITHUB_OUTPUT
 
     # - name: Version Info
     #   id: version_info
