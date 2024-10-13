@@ -47,14 +47,16 @@ runs:
         IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
         IFS=',' read -r -a version_files_array <<< "$version_files_string"
 
+        main_workspace=
+        main_version_file=
+
         # if there are more than one workspaces, ignore 1st (1st one is the project)
         if [[ ${#workspaces_array[@]} -gt 1 ]]; then
-           workspaces_array=("${workspaces_array[@]:1}")
-           version_files_array=("${version_files_array[@]:1}")
+          main_workspace=${workspaces_array[0]}
+          main_version_file=${version_files_aray[0]}
+          workspaces_array=("${workspaces_array[@]:1}")
+          version_files_array=("${version_files_array[@]:1}")
         fi
-
-        echo "workspaces_array=${workspaces_array[@]}"
-        echo "version_files_array=${version_files_array[@]}"
 
         for ((i=0; i<${#workspaces_array[@]}; i++)); do
           workspace=${workspaces_array[$i]}
@@ -62,7 +64,6 @@ runs:
           echo "testing workspace '$workspace' for changes"
 
           changed_files=$(git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD -- "$workspace")
-          echo "$changed_files=\"${changed_files}\""
           if [[ -n "$changed_files" ]]; then
             echo '- changes found'
             changed=$(echo "$changed" | jq --arg ws "$workspace" --arg vf "$version_file" '. += [{"workspace": $ws, "version_file": $vf}]')
@@ -70,6 +71,10 @@ runs:
             echo '- no changes found'
           fi
         done
+
+        if [[ "$changed" != '[]' && -n "$main_workspace" ]]; then
+          changed=$(echo "$changed" | jq --arg ws "$main_workspace" --arg vf "$main_version_file" '. += [{"workspace": $ws, "version_file": $vf}]')
+        fi
 
         changed_json=$(echo "$changed" | jq -c '.')
 
