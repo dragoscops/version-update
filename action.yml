@@ -103,8 +103,8 @@ runs:
         if [[ "$last_commit_message" == "(rc"* || "$last_commit_message" == "(release-candidate"* ]]; then
           pre_release_id=$(echo "$last_commit_message" | grep -oP '\((rc|release-candidate)(?::\K[^)]*|)\)' | sed 's/^$/rc/')
         fi
-        echo "pre_release_id=\"${pre_release_id}\""
-        echo "pre_release_id=\"${pre_release_id}\"" >> $GITHUB_OUTPUT
+        echo "pre_release_id=${pre_release_id}"
+        echo "pre_release_id=${pre_release_id}" >> $GITHUB_OUTPUT
 
     - name: Commands Warmup
       id: commands_info
