@@ -98,6 +98,7 @@ runs:
                   version=$(cat $version_file)
                   version=${version:-0.0.0}
                   ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION > $version_file"
+                  ;;
                 *)
                   echo "::error:: Unsupported version file: $version_file"
                   exit 1
@@ -131,6 +132,7 @@ runs:
                   ;;
                 version|VERSION|version.txt|VERSION.txt)
                   version=$(cat $version_file)
+                  ;;
                 *)
                   echo "::error:: Unsupported version file: $version_file"
                   exit 1

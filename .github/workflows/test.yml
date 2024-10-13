@@ -48,5 +48,6 @@ jobs:
         id: version_update_action_mp
         uses: dragoscirjan/version-update-action@main
         with:
-          workspaces: "test/node,test/node-2"
+          workspaces: "test,test/node,test/node-2"
+          version_files: VERSION,package.json,pacjage.json
           dry_run: true
