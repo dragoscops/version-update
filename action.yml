@@ -40,6 +40,8 @@ runs:
       id: workspaces_info
       shell: bash
       run: |
+        workspaces_string="${{ inputs.workspaces }}"
+        version_files_string="${{ inputs.version_files }}"
         changed='[]'
 
         IFS=',' read -r -a workspace_array <<< "$workspaces_string"
@@ -48,12 +50,12 @@ runs:
         # if there are more than one workspaces, ignore 1st (1st one is the project)
         if [[ ${#workspaces_array[@]} -gt 1 ]]; then
            workspaces_array=("${workspaces_array[@]:1}")
-           version_file_array=("${version_file_array[@]:1}")
+           version_files_array=("${version_files_array[@]:1}")
         fi
 
         for ((i=0; i<${#workspaces_array[@]}; i++)); do
           workspace=${workspaces_array[$i]}
-          version_file=${version_file_array[$i]}
+          version_file=${version_files_array[$i]}
           echo "testing workspace '$workspace' for changes"
 
           changed_files=$(git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD -- "$workspace")
