@@ -30,9 +30,7 @@ jobs:
 
       - name: Create Test Commit
         run: |
-          set -e
-
-          date > ./test/node/.update
+          date +%s > ./test/node/.update
           git add ./test
           git commit -m "feat: Added a feature"
 
@@ -45,29 +43,14 @@ jobs:
 
       - name: Create Test Commit
         run: |
-          date > ./test/node/.update
+          date +%s > ./test/node/.update
           git add ./test
           git commit -m "fix: Added a fix"
 
-      - name: Run Version Update Action (multi project)
+      - name: Run Version Update Action (multi project, one project changed)
         id: version_update_action_mp
         uses: dragoscirjan/version-update-action@main
         with:
           workspaces: "test,test/node,test/node-2"
           version_files: VERSION,package.json,pacjage.json
           dry_run: true
-
-      # - name: Create Test Commit
-      #   run: |
-      #     date > ./test/node/.update
-      #     date > ./test/node-2/.update
-      #     git add ./test
-      #     git commit -m "feat!: Added a breaking change"
-      #
-      # - name: Run Version Update Action (multi project)
-      #   id: version_update_action_mp2
-      #   uses: dragoscirjan/version-update-action@main
-      #   with:
-      #     workspaces: "test,test/node,test/node-2"
-      #     version_files: VERSION,package.json,pacjage.json
-      #     dry_run: true
