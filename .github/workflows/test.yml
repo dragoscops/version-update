@@ -28,14 +28,16 @@ jobs:
           git config user.email "actions@github.com"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
-          echo "commit_message=$(git log -1 --no-merges --pretty=format:%B)" >> $GITHUB_OUTPUT
-          echo "pr_message=$(git log -1 --pretty=format:%B)" >> $GITHUB_OUTPUT
-
       - name: Create Test Commit
         run: |
+          set -e
+
           date > ./test/node/.update
           git add ./test
           git commit -m "feat: Added a feature"
+
+          last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1 || echo "HEAD~$(git rev-list --count HEAD)")
+          git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD
 
       - name: Run Version Update Action (single project)
         id: version_update_action_sp
@@ -48,6 +50,7 @@ jobs:
         run: |
           date > ./test/node/.update
           git add ./test
+
           git commit -m "fix: Added a fix"
 
           last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1 || echo "HEAD~$(git rev-list --count HEAD)")
