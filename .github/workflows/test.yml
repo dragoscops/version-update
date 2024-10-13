@@ -51,7 +51,7 @@ jobs:
           git commit -m "fix: Added a fix"
 
           last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1 || echo "HEAD~$(git rev-list --count HEAD)")
-          git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD -- "$workspace"
+          git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD
 
       - name: Run Version Update Action (multi project)
         id: version_update_action_mp
