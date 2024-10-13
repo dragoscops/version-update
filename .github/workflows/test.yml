@@ -50,24 +50,28 @@ jobs:
           workspaces: "test/node"
           dry_run: true
 
-      # - name: Create Test Commit
-      #   run: |
-      #     date > ./test/node/.update
-      #     git add ./test
-      #
-      #     git commit -m "fix: Added a fix"
-      #
-      #     last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1 || echo "HEAD~$(git rev-list --count HEAD)")
-      #     git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD
-      #
-      # - name: Run Version Update Action (multi project)
-      #   id: version_update_action_mp
-      #   uses: dragoscirjan/version-update-action@main
-      #   with:
-      #     workspaces: "test,test/node,test/node-2"
-      #     version_files: VERSION,package.json,pacjage.json
-      #     dry_run: true
-      #
+      - name: Create Test Commit
+        run: |
+          date > ./test/node/.update
+          git add ./test
+
+          git commit -m "fix: Added a fix"
+
+          last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1)
+          if [[ -z "$last_tag" ]]; then
+          #last_tag=$(echo "HEAD~$(git rev-list --count HEAD)")
+            last_tag=$(git rev-list --max-parents=0 HEAD)
+          fi
+          git diff --name-only "$last_tag" HEAD
+
+      - name: Run Version Update Action (multi project)
+        id: version_update_action_mp
+        uses: dragoscirjan/version-update-action@main
+        with:
+          workspaces: "test,test/node,test/node-2"
+          version_files: VERSION,package.json,pacjage.json
+          dry_run: true
+
       # - name: Create Test Commit
       #   run: |
       #     date > ./test/node/.update
