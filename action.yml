@@ -52,7 +52,7 @@ runs:
           version_file=${version_file_array[$i]}
           echo "testing workspace '$workspace' for changes"
            
-          changed_files=$(git diff --name-only "$LAST_TAG" HEAD -- "$workspace")
+          changed_files=$(git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD -- "$workspace")
           if [[ -n "$changed_files" ]]; then
             echo '- changes found'
             changed=$(echo "$changed" | jq --arg ws "$workspace" --arg vf "$version_file" '. += [{"workspace": $ws, "version_file": $vf}]')
