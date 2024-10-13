@@ -36,13 +36,6 @@ jobs:
           git add ./test
           git commit -m "feat: Added a feature"
 
-          last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1)
-          if [[ -z "$last_tag" ]]; then
-          #last_tag=$(echo "HEAD~$(git rev-list --count HEAD)")
-            last_tag=$(git rev-list --max-parents=0 HEAD)
-          fi
-          git diff --name-only "$last_tag" HEAD
-
       - name: Run Version Update Action (single project)
         id: version_update_action_sp
         uses: dragoscirjan/version-update-action@main
@@ -54,15 +47,7 @@ jobs:
         run: |
           date > ./test/node/.update
           git add ./test
-
           git commit -m "fix: Added a fix"
-
-          last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1)
-          if [[ -z "$last_tag" ]]; then
-          #last_tag=$(echo "HEAD~$(git rev-list --count HEAD)")
-            last_tag=$(git rev-list --max-parents=0 HEAD)
-          fi
-          git diff --name-only "$last_tag" HEAD
 
       - name: Run Version Update Action (multi project)
         id: version_update_action_mp
