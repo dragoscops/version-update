@@ -57,8 +57,8 @@ runs:
         fi
 
         # for release-it, will not use npm push, git tag and git push 
-        RELEASEIT="npx release-it --no-npm --git.tag=false --git.push=false"
-        RELEASEIT="${RELEASEIT} --incremnet=${{ steps.version_info.outputs.increment }}"
+        RELEASEIT="npx release-it --no-npm.publish --no-git.tag --no-git.push --ci"
+        RELEASEIT="${RELEASEIT} --increment=${{ steps.version_info.outputs.increment }}"
         if [[ -n "${{ steps.version_info.outputs.pre_release_id }}" ]]; then
           RELEASEIT="${RELEASE} --preReleaseId=${{ steps.version_info.outputs.pre_release_id }}"
         fi
