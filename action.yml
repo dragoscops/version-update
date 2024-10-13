@@ -74,7 +74,8 @@ runs:
         echo env=$(echo '${{ toJSON(env) }}' | jq -r '.')
 
     - name: Increase Versions
-      id: versions
+      id: increase_versions_info
+      if: ${{ steps.version_info.outputs.increment }}
       shell: bash
       run: |
         workspaces_string="${{ inputs.workspaces }}"
@@ -107,7 +108,7 @@ runs:
         echo "versions=$versions_string" >> $GITHUB_OUTPUT
 
     - name: Create version branch
-      if: ${{ ! inputs.no_pr && ! steps.git_info.outputs.pr_message }}
+      if: ${{ ! inputs.no_pr && ! startsWith(steps.git_info.outputs.pr_message, 'chore: version merge') }}
       shell: bash
       run: |
         version_branch="version_${{ steps.version_info.outputs.version }}"
