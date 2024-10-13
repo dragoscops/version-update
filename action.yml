@@ -149,7 +149,7 @@ runs:
             version|VERSION|version.txt|VERSION.txt)
               version=$(cat $ws_version_file)
               if [[ -z "$version" ]]; version="0.0.0"; fi
-              ${{ env.RELEASEIT } --pre-changelog "VERSION=$versioin" --post-changelog "echo $VERSION > $ws_version_file"
+              ${{ env.RELEASEIT }} --pre-changelog "VERSION=$versioin" --post-changelog "echo $VERSION > $ws_version_file"
 
               echo "$ws_path workspace version increased to $(cat $ws_version_file)"
               ;;
