@@ -47,6 +47,9 @@ runs:
         IFS=',' read -r -a workspace_array <<< "$workspaces_string"
         IFS=',' read -r -a version_file_array <<< "$version_files_string"
 
+        echo "workspaces_array=${workspaces_array[@]}"
+        echo "version_files_array=${version_files_array[@]}"
+
         # if there are more than one workspaces, ignore 1st (1st one is the project)
         if [[ ${#workspaces_array[@]} -gt 1 ]]; then
            workspaces_array=("${workspaces_array[@]:1}")
