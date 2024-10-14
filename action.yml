@@ -247,6 +247,7 @@ runs:
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
         git remote set-url origin https://x-access-token:${{ inputs.github_token }}@github.com/${{ github.repository }}.git
 
     - name: Create Version Branch
