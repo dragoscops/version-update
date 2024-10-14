@@ -198,7 +198,7 @@ runs:
 
     - name: Prepare Tag
       id: tag_info
-      if: ${{ steps.increase_versions_info.outputs.versions }}
+      if: ${{ steps.versions_info.outputs.versions }}
       shell: bash
       run: |
         workspaces_string="${{ inputs.workspaces }}"
