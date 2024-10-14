@@ -186,7 +186,7 @@ runs:
             *)
               echo "::error:: Unsupported version file: $version_file"
               exit 1
-            esac
+          esac
             versions_array+=($version)
 
           cd ${{ github.workspace }}
@@ -196,49 +196,63 @@ runs:
         echo "versions=$versions_string"
         echo "versions=$versions_string" >> $GITHUB_OUTPUT
 
-    # - name: Prepare Tag
-    #   id: tag_info
-    #   if: ${{ steps.increase_versions_info.outputs.versions }}
+    - name: Prepare Tag
+      id: tag_info
+      if: ${{ steps.increase_versions_info.outputs.versions }}
+      shell: bash
+      run: |
+        workspaces_string="${{ inputs.workspaces }}"
+        version_files_string="${{ inputs.version_files }}"
+        versions_string='${{ steps.increase_versions_info.outputs.versions }}'
+
+        IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
+        IFS=',' read -r -a version_files_array <<< "$version_files_string"
+        IFS=',' read -r -a versions_array <<< "$versions_string"
+
+        tag="v${versions_array[0]}"
+
+        if [[ ${#versions_array[@]} -gt 1 ]]; then
+          workspaces_array=("${workspaces_array[@]:1}")
+          version_files_array=("${version_files_array[@]:1}")
+          versions_array=("${versions_array[@]:1}")
+
+          for (( i=0; i<${#versions_array[@]}; i++ )); do
+            workspace=${workspaces_array[$i]}
+            cd $workspace
+            workspace_name=$workspace
+
+            case $version_file in
+              package.json)
+                workspace_name=$(cat package.json | jq -r '.name')
+                ;;
+            esac
+            tag="${tag}-${workspaces_name}@${versions_array[$i]}"
+
+            cd ${{ github.workspace }}
+          done
+        fi
+
+        echo "tag=$tag"
+        echo "tag=$tag" >> $GITHUB_OUTPUT
+
+    # - name: Create version branch
+    #   if: ${{ steps.increase_version_info.outputs.versions && ! inputs.no_pr }}
     #   shell: bash
     #   run: |
-    #     workspaces_string="${{ inputs.workspaces }}"
-    #     versions_string='${{ steps.increase_versions_info.outputs.versions }}'
+    #     version_branch="version_${{ steps.version_info.outputs.version }}"
+    #     git checkout -b $version_branch
     #
-    #     IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
-    #     IFS=',' read -r -a versions_array <<< "$versions_string"
+    #     git add .
+    #     git commit -am "chore: version merge ${{ steps.version_info.outputs.version }}"
+    #     #git push origin $version_branch
     #
-    #     tag="v${versions_array[0]}"
+    #     #gh
     #
-    #     if [[ ${#versions_array[@]} -gt 1 ]]; then
-    #       versions_array=("${versions_array[@]:1}")
-    #       workspaces_array=("${workspaces_array[@]:1}")
+    # # TODO: add step for merging version into main, which also needs to create the tag
     #
-    #       for (( i=0; i<${#versions_array[@]}; i++ )); do
-    #         tag="${tag}--${workspaces_array[$i]}@${versions_array[$i]}"
-    #       done
-    #     fi
-    #
-    #     echo "tag=$tag"
-    #     echo "tag=$tag" >> $GITHUB_OUTPUT
-    #
-    # # - name: Create version branch
-    # #   if: ${{ steps.increase_version_info.outputs.versions && ! inputs.no_pr }}
-    # #   shell: bash
-    # #   run: |
-    # #     version_branch="version_${{ steps.version_info.outputs.version }}"
-    # #     git checkout -b $version_branch
-    # #
-    # #     git add .
-    # #     git commit -am "chore: version merge ${{ steps.version_info.outputs.version }}"
-    # #     #git push origin $version_branch
-    # #
-    # #     #gh
-    # #
-    # # # TODO: add step for merging version into main, which also needs to create the tag
-    # #
-    # # - name: Commit version
-    # #   if: ${{ steps.increase_version_info.outputs.versions && inputs.no_pr }}
-    # #   shell: bash
-    # #   run: |
-    # #     git add .
-    # #     git commit -am "chore: version released ${{ steps.version_info.outputs.versions }}
+    # - name: Commit version
+    #   if: ${{ steps.increase_version_info.outputs.versions && inputs.no_pr }}
+    #   shell: bash
+    #   run: |
+    #     git add .
+    #     git commit -am "chore: version released ${{ steps.version_info.outputs.versions }}

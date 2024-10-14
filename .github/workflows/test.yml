@@ -16,9 +16,11 @@ jobs:
           - title: single project
             workspaces: test/node
             version_files: package.json
+            commit_tag: feat
           - title: multi project
             workspaces: test,test/node,test/node-2
             version_files: VERSION,package.json,package.json
+            commit_tag: fix
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -41,7 +43,7 @@ jobs:
         run: |
           date +%s > ./test/node/.update
           git add ./test
-          git commit -m "feat: Added a feature"
+          git commit -m "${{ matrix.commit_tag }}: Added a feature"
 
       - name: Run Version Update Action (${{ matrix.title }})
         id: version_update_action_sp
