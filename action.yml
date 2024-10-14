@@ -242,14 +242,16 @@ runs:
       if: ${{ steps.versions_info.outputs.versions && ! inputs.no_pr }}
       shell: bash
       run: |
-        version_branch="version_${{ steps.version_info.outputs.version }}"
+        tag="${{ steps.tag_info.outputs.tag }}"
+        tag=$(echo $tag | sed -e 's/[^a-zA-Z0-9]/_/g')
+        version_branch="version_${tag}"
         git checkout -b $version_branch
 
         git add .
-        git commit -am "chore: version pull request ${{ steps.version_info.outputs.version }}"
+        git commit -am "chore: version pull request ${{ steps.tag_info.outputs.tag }}"
 
         git push origin $version_branch
-        gh pr create --base main --head $version_branch --title "version pull request ${{ steps.version_info.outputs.version }}" --body "New Version Proposed"
+        gh pr create --base main --head $version_branch --title "version pull request ${{ steps.tag_info.outputs.tag }}" --body "New Version Proposed"
 
     # - name: Commit Version
     #   id: version_commit
