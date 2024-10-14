@@ -169,7 +169,7 @@ runs:
       id: versions_info
       shell: bash
       run: |
-        workspaches_string="${{ inputs.workspaces }}"
+        workspaces_string="${{ inputs.workspaces }}"
         version_files_string="${{ inputs.version_files }}"
         versions_array=()
 
