@@ -51,4 +51,5 @@ jobs:
         with:
           workspaces: "${{ matrix.workspaces }}"
           version_files: "${{ matrix.version_files }}"
+          github_token: "${{ secrets.GH_TOKEN }}"
           dry_run: true

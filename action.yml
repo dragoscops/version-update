@@ -2,12 +2,15 @@ name: version-update-action
 description: Github Action for Updating Versions
 
 inputs:
+  github_token:
+    description: Github Token, used for pushing the commit changes or pull request
+    required: true
   workspaces:
-    description: Paths to the workspaces (separated by comma)
     default: "."
+    description: Paths to the workspaces (separated by comma)
   version_files:
-    description: Version files to look for in each workspace (separated by comma)
     default: package.json
+    description: Version files to look for in each workspace (separated by comma)
   no_pr:
     description: Use pull request to increase the version
   dry_run:
@@ -161,12 +164,12 @@ runs:
         done
 
     # TODO: add a step to build changelogs per workspace
-
+                t
     - name: Build Versions List
       id: versions_info
       shell: bash
       run: |
-        workspaces_string="${{ inputs.workspaces }}"
+        workspaches_string="${{ inputs.workspaces }}"
         version_files_string="${{ inputs.version_files }}"
         versions_array=()
 
@@ -230,13 +233,21 @@ runs:
                 ;;
             esac
             tag="${tag}-${workspace_name}@${versions_array[$i]}"
-
+                u
             cd ${{ github.workspace }}
           done
         fi
 
         echo "tag=$tag"
         echo "tag=$tag" >> $GITHUB_OUTPUT
+
+    - name: Set up Git
+      shell: bash
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
+        git remote set-url origin https://x-access-token:${{ inputs.github_token }}@github.com/${{ github.repository }}.git
 
     - name: Create Version Branch
       if: ${{ steps.versions_info.outputs.versions && ! inputs.no_pr }}
@@ -268,4 +279,4 @@ runs:
     #   shell: bash
     #   run: |
     #     git tag ${{ steps.tag_info.outputs.tag }}
-    #     git push origin ${{ steps.tag_info.outputs.tag }}
+    #     git pubsh origin ${{ steps.tag_info.outputs.tag }}
