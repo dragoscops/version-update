@@ -226,7 +226,7 @@ runs:
                 workspace_name=$(cat package.json | jq -r '.name')
                 ;;
             esac
-            tag="${tag}-${workspaces_name}@${versions_array[$i]}"
+            tag="${tag}-${workspace_name}@${versions_array[$i]}"
 
             cd ${{ github.workspace }}
           done
