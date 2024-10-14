@@ -238,24 +238,32 @@ runs:
         echo "tag=$tag"
         echo "tag=$tag" >> $GITHUB_OUTPUT
 
-    # - name: Create version branch
-    #   if: ${{ steps.increase_version_info.outputs.versions && ! inputs.no_pr }}
-    #   shell: bash
-    #   run: |
-    #     version_branch="version_${{ steps.version_info.outputs.version }}"
-    #     git checkout -b $version_branch
-    #
-    #     git add .
-    #     git commit -am "chore: version merge ${{ steps.version_info.outputs.version }}"
-    #     #git push origin $version_branch
-    #
-    #     #gh
-    #
-    # # TODO: add step for merging version into main, which also needs to create the tag
-    #
-    # - name: Commit version
+    - name: Create Version Branch
+      if: ${{ steps.increase_version_info.outputs.versions && ! inputs.no_pr }}
+      shell: bash
+      run: |
+        version_branch="version_${{ steps.version_info.outputs.version }}"
+        git checkout -b $version_branch
+
+        git add .
+        git commit -am "chore: version pull request ${{ steps.version_info.outputs.version }}"
+
+        git push origin $version_branch
+        gh pr create --base main --head $version_branch --title "version pull request ${{ steps.version_info.outputs.version }}" --body "New Version Proposed"
+
+    # - name: Commit Version
+    #   id: version_commit
     #   if: ${{ steps.increase_version_info.outputs.versions && inputs.no_pr }}
     #   shell: bash
     #   run: |
     #     git add .
     #     git commit -am "chore: version released ${{ steps.version_info.outputs.versions }}
+    #
+    #     echo "version_commit=1" >> $GITHUB_OUTPUT
+    #
+    # - name: Create Tag
+    #   if: ${{ steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.pr_message, 'version pull request') }}
+    #   shell: bash
+    #   run: |
+    #     git tag ${{ steps.tag_info.outputs.tag }}
+    #     git push origin ${{ steps.tag_info.outputs.tag }}
