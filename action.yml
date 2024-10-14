@@ -168,8 +168,8 @@ runs:
         version_files_string="${{ inputs.version_files }}"
         versions_array=()
 
-        IFS=',' read -r -a workspace_array <<< "$workspaces_string"
-        IFS=',' read -r -a version_file_array <<< "$version_files_string"
+        IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
+        IFS=',' read -r -a version_files_array <<< "$version_files_string"
 
         for ((i=0; i<${#workspaces_array[@]}; i++)); do
           workspace=${workspace_array[$i]}
