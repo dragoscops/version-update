@@ -3,7 +3,7 @@ description: Github Action for Updating Versions
 
 inputs:
   github_token:
-    description: Github Token, used for pushing the commit changes or pull request
+    description: Github Token for git commit or gh pr create
     required: true
   workspaces:
     default: "."
@@ -164,7 +164,7 @@ runs:
         done
 
     # TODO: add a step to build changelogs per workspace
-                t
+
     - name: Build Versions List
       id: versions_info
       shell: bash
