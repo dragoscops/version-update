@@ -203,7 +203,7 @@ runs:
       run: |
         workspaces_string="${{ inputs.workspaces }}"
         version_files_string="${{ inputs.version_files }}"
-        versions_string='${{ steps.increase_versions_info.outputs.versions }}'
+        versions_string='${{ steps.versions_info.outputs.versions }}'
 
         IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
         IFS=',' read -r -a version_files_array <<< "$version_files_string"
