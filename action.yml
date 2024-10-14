@@ -249,6 +249,10 @@ runs:
         git config --global --add safe.directory "$GITHUB_WORKSPACE"
         git remote set-url origin https://x-access-token:${{ inputs.github_token }}@github.com/${{ github.repository }}.git
 
+        pwd
+        ls -la .
+        git remote show origin
+
     - name: Create Version Branch
       if: ${{ steps.versions_info.outputs.versions && ! inputs.no_pr }}
       shell: bash
