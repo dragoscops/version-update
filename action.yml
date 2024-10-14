@@ -218,6 +218,7 @@ runs:
 
           for (( i=0; i<${#versions_array[@]}; i++ )); do
             workspace=${workspaces_array[$i]}
+            version_file=${version_files_array[$i]}
             cd $workspace
             workspace_name=$workspace
 
