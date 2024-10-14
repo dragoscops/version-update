@@ -239,7 +239,7 @@ runs:
         echo "tag=$tag" >> $GITHUB_OUTPUT
 
     - name: Create Version Branch
-      if: ${{ steps.increase_version_info.outputs.versions && ! inputs.no_pr }}
+      if: ${{ steps.versions_info.outputs.versions && ! inputs.no_pr }}
       shell: bash
       run: |
         version_branch="version_${{ steps.version_info.outputs.version }}"
@@ -253,7 +253,7 @@ runs:
 
     # - name: Commit Version
     #   id: version_commit
-    #   if: ${{ steps.increase_version_info.outputs.versions && inputs.no_pr }}
+    #   if: ${{ steps.versions_info.outputs.versions && inputs.no_pr }}
     #   shell: bash
     #   run: |
     #     git add .
