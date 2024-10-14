@@ -172,7 +172,7 @@ runs:
         IFS=',' read -r -a version_files_array <<< "$version_files_string"
 
         for ((i=0; i<${#workspaces_array[@]}; i++)); do
-          workspace=${workspace_array[$i]}
+          workspace=${workspaces_array[$i]}
           version_file=${version_files_array[$i]}
           cd $workspace
 
