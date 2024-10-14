@@ -160,6 +160,8 @@ runs:
           echo '::endgroup::'
         done
 
+    # TODO: add a step to build changelogs per workspace
+
     - name: Build Versions List
       id: versions_info
       shell: bash
