@@ -33,20 +33,23 @@ jobs:
 
       - name: Prerequisites
         id: prereqs
-        run: test_run="${{ inputs.test_run || 'single-repo' }}"
+        run: |
+          test_run="${{ inputs.test_run || 'single-repo' }}"
+
           case $test_run in
-          single-repo)
-          echo test_title="Single Run" >> $GITHUB_OUTPUT
-          echo test_workspaces="test/node" >> $GITHUB_OUTPUT
-          echo test_version_files="" >> $GITHUB_OUTPUT
-          echo test_commit_tag="feat" >> $GITHUB_OUTPUT
-          echo test_version_message="do the version update" >> $GITHUB_OUTPUT
-          ;;
-          *)
-          echo "::error::Invalid test run"
-          exit 1
-          ;;
+            single-repo)
+              echo test_title="Single Run" >> $GITHUB_OUTPUT
+              echo test_workspaces="test/node" >> $GITHUB_OUTPUT
+              echo test_version_files="" >> $GITHUB_OUTPUT
+              echo test_commit_tag="feat" >> $GITHUB_OUTPUT
+              echo test_version_message="do the version update" >> $GITHUB_OUTPUT
+            ;;
+            *)
+              echo "::error::Invalid test run"
+              exit 1
+            ;;
           esac
+
       #       - title: multi project
       #         workspaces: test,test/node,test/node-2
       #         version_files: VERSION,package.json,package.json
