@@ -82,7 +82,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Test Commit (Single Project)
-        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, steps.prereqs.outpus.test_version_message) }}
+        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, steps.prereqs.outputs.test_version_message) }}
         run: |
           date +%s > ./test/node/.update
           git add ./test
@@ -100,7 +100,7 @@ jobs:
           no_pr: "${{ steps.prereqs.outpus.test_no_pr }}"
 
       - name: Pull Request Debug (${{ steps.prereqs.outputs.test_title }})
-        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, steps.prereqs.outpus.test_version_message) }}
+        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, steps.prereqs.outputs.test_version_message) }}
         env:
           GH_TOKEN: "${{ secrets.GH_TOKEN }}"
         run: |
