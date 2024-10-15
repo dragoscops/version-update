@@ -295,7 +295,7 @@ runs:
 
           pr_title="${{ inputs.version_message }} ${{ steps.tag_info.outputs.tag }}" 
           echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
-          gh pr create --base main --head $version_branch --title $pr_title --body "New Version Proposed"
+          gh pr create --base main --head "$version_branch" --title "$pr_title" --body "New Version Proposed"
 
           echo "version_pr=1" >> $GITHUB_OUTPUT
         else
