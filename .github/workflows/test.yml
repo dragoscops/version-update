@@ -72,7 +72,7 @@ jobs:
 
           echo pr_id=$pr_id 
 
-          gh merge pr $pr_id --squash
+          gh pr merge $pr_id --squash
 
           sleep 5
           git pull 
