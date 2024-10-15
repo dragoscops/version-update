@@ -262,15 +262,25 @@ runs:
         tag="${{ steps.tag_info.outputs.tag }}"
         tag=$(echo $tag | sed -e 's/[^a-zA-Z0-9]/_/g')
         version_branch="version_${tag}"
-        git checkout -b $version_branch
 
-        git add .
-        git commit -am "chore: version pull request ${{ steps.tag_info.outputs.tag }}"
+        # Check if there are changes before creating a branch and committing
+        if [[ -n "$(git status --porcelain)" ]]; then
+          git checkout -b $version_branch
 
-        git push origin $version_branch
-        gh pr create --base main --head $version_branch \
-          --title "version pull request ${{ steps.tag_info.outputs.tag }}" \
-          --body "New Version Proposed"
+          # Commit the changes
+          git add .
+          git commit -am "chore: version pull request ${{ steps.tag_info.outputs.tag }}"
+
+          # Push the new branch
+          git push origin $version_branch
+
+          # Create a pull request
+          gh pr create --base main --head $version_branch \
+            --title "version pull request ${{ steps.tag_info.outputs.tag }}" \
+            --body "New Version Proposed"
+        else
+          echo "No changes to commit. Skipping branch creation."
+        fi
 
     # - name: Commit Version
     #   id: version_commit
@@ -286,5 +296,13 @@ runs:
       if: ${{ steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.pr_message, 'version pull request') }}
       shell: bash
       run: |
-        git tag ${{ steps.tag_info.outputs.tag }}
-        git push origin ${{ steps.tag_info.outputs.tag }}
+        tag="${{ steps.tag_info.outputs.tag }}"
+        git fetch --all --tags
+
+        # Ensure the tag doesn't already exist
+        if git rev-parse "$tag" >/dev/null 2>&1; then
+          echo "Tag $tag already exists. Skipping tag creation."
+        else
+          git tag "$tag"
+          git push origin "$tag"
+        fi
