@@ -2,6 +2,16 @@ name: Test Version Update Action
 
 on:
   workflow_dispatch:
+    inputs:
+      test_run:
+        description: Test to Run
+        default: single-repo
+        type: choice
+        options:
+          - single-repo
+          - multi-repo
+          - multi-repo,js,go
+          - multi-repo,js,py
   push:
     branches:
       - main
@@ -10,8 +20,6 @@ on:
 jobs:
   test-version-update-action:
     runs-on: ubuntu-latest
-    env:
-      VERSION_MESSAGE: "do the version update"
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -22,6 +30,32 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
+
+      - name: Prerequisites
+        id: prereqs
+        run: test_run="${{ inputs.test_run }}"
+          case $test_run in
+          single-repo)
+          echo test_title="Single Run" >> $GITHUB_OUTPUT
+          echo test_workspaces="test/node" >> $GITHUB_OUTPUT
+          echo test_version_files="" >> $GITHUB_OUTPUT
+          echo test_commit_tag="feat" >> $GITHUB_OUTPUT
+          echo test_version_message="do the version update" >> $GITHUB_OUTPUT
+          ;;
+          *)
+          echo "::error::Invalid test run"
+          exit 1
+          ;;
+          esac
+      #       - title: multi project
+      #         workspaces: test,test/node,test/node-2
+      #         version_files: VERSION,package.json,package.json
+      #         commit_tag: fix
+      #       - title: multi project, multi lang
+      #         workspaces: test,test/node,test/node-2
+      #         version_files: VERSION,package.json,package.json
+      #         commit_tag: fix
+      #         no_pr: 1
 
       - name: Set up Git
         run: |
@@ -45,24 +79,25 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Test Commit (Single Project)
-        if: ${{ github.event_name == 'push' && ! contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
+        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, steps.prereqs.outpus.test_version_message) }}
         run: |
           date +%s > ./test/node/.update
           git add ./test
           git commit -m "feat: Added a feature"
 
-      - name: Run Version Update Action (Single Project)
+      - name: Run Version Update Action (${{ steps.prereqs.outputs.test_title }})
         id: update_sp
-        if: ${{ github.event_name == 'push' && ! contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
         uses: dragoscirjan/version-update-action@main
         with:
           github_token: "${{ secrets.GH_TOKEN }}"
           # github_token: "${{ secrets.GITHUB_TOKEN }}"
-          version_message: "${{ env.VERSION_MESSAGE }}"
-          workspaces: test/node
+          version_message: "${{ steps.prereqs.outpus.test_version_message }}"
+          workspaces: "${{ steps.prereqs.outpus.test_workspaces }}"
+          version_files: "${{ steps.prereqs.outpus.test_version_files }}"
+          no_pr: "${{ steps.prereqs.outpus.test_no_pr }}"
 
-      - name: Pull Request Debug (Single Project)
-        if: ${{ github.event_name == 'push' && ! contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
+      - name: Pull Request Debug (${{ steps.prereqs.outputs.test_title }})
+        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, steps.prereqs.outpus.test_version_message) }}
         env:
           GH_TOKEN: "${{ secrets.GH_TOKEN }}"
         run: |
@@ -82,13 +117,3 @@ jobs:
           git pull 
 
           cat ./test/node/package.json | jq -r '.version'
-
-    #       - title: multi project
-    #         workspaces: test,test/node,test/node-2
-    #         version_files: VERSION,package.json,package.json
-    #         commit_tag: fix
-    #       - title: multi project, multi lang
-    #         workspaces: test,test/node,test/node-2
-    #         version_files: VERSION,package.json,package.json
-    #         commit_tag: fix
-    #         no_pr: 1
