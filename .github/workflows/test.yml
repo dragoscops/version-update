@@ -45,7 +45,6 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Test Commit (Single Project)
-        if: ${{ github.event_name == 'push' && !contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
         run: |
           date +%s > ./test/node/.update
           git add ./test
@@ -64,10 +63,9 @@ jobs:
       - name: Pull Request Debug (Single Project)
         env:
           GH_TOKEN: "${{ secrets.GH_TOKEN }}"
-        if: ${{ github.event_name == 'push' && !contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
         run: |
           echo "version_branch=${{ steps.update_sp.outputs.version_branch }}"
-          echo "pr_title=${{ update_sp.outputs.pr_title }}"
+          echo "pr_title=${{ steps.update_sp.outputs.pr_title }}"
 
           gh pr list --state open
 
