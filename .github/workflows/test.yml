@@ -33,7 +33,6 @@ jobs:
           node-version: "18"
 
       - name: Set up Git
-        id: git_info
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
