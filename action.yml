@@ -297,7 +297,7 @@ runs:
     #     echo "version_commit=1" >> $GITHUB_OUTPUT
 
     - name: Create Tag
-      if: ${{ steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.pr_message, 'version pull request') }}
+      if: ${{ steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.last_commit_message, 'version pull request') }}
       shell: bash
       run: |
         tag="${{ steps.tag_info.outputs.tag }}"
