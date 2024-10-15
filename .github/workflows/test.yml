@@ -40,7 +40,7 @@ jobs:
             single-repo)
               echo test_title="Single Run" >> $GITHUB_OUTPUT
               echo test_workspaces="test/node" >> $GITHUB_OUTPUT
-              echo test_version_files="" >> $GITHUB_OUTPUT
+              echo test_version_files="package.json" >> $GITHUB_OUTPUT
               echo test_commit_tag="feat" >> $GITHUB_OUTPUT
               echo test_version_message="do the version update" >> $GITHUB_OUTPUT
             ;;
