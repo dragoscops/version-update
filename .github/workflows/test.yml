@@ -33,7 +33,7 @@ jobs:
 
       - name: Prerequisites
         id: prereqs
-        run: test_run="${{ inputs.test_run }}"
+        run: test_run="${{ inputs.test_run || 'single-repo' }}"
           case $test_run in
           single-repo)
           echo test_title="Single Run" >> $GITHUB_OUTPUT
