@@ -21,6 +21,11 @@ jobs:
             workspaces: test,test/node,test/node-2
             version_files: VERSION,package.json,package.json
             commit_tag: fix
+          - title: multi project, multi lang
+            workspaces: test,test/node,test/node-2
+            version_files: VERSION,package.json,package.json
+            commit_tag: fix
+            no_pr: 1
     env:
       VERSION_MESSAGE: "do the version update"
     steps:

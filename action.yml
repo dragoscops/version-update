@@ -295,18 +295,18 @@ runs:
           echo "No changes to commit. Skipping branch creation."
         fi
 
-    # - name: Commit Version
-    #   id: version_commit
-    #   if: ${{ steps.versions_info.outputs.versions && inputs.no_pr }}
-    #   shell: bash
-    #   run: |
-    #     git add .
-    #     git commit -am "chore: version released ${{ steps.version_info.outputs.versions }}
-    #
-    #     echo "version_commit=1" >> $GITHUB_OUTPUT
+    - name: Commit Version
+      id: version_commit
+      if: ${{ steps.versions_info.outputs.versions && inputs.no_pr }}
+      shell: bash
+      run: |
+        git add .
+        git commit -am "chore: ${{ inputs.version_message }} ${{ steps.version_info.outputs.versions }}
+
+        echo "version_commit=1" >> $GITHUB_OUTPUT
 
     - name: Create Tag
-      if: ${{ github.event_name == 'push' && contains(steps.git_info.outputs.last_commit_message, inputs.version_message) }}
+      if: ${{ github.event_name == 'push' && ( steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.last_commit_message, inputs.version_message) ) }}
       shell: bash
       run: |
         echo "${{ steps.git_info.outputs.last_commit_message }}"
