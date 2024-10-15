@@ -45,6 +45,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Test Commit (Single Project)
+        if: ${{ github.event_name == 'push' && ! contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
         run: |
           date +%s > ./test/node/.update
           git add ./test
@@ -52,7 +53,7 @@ jobs:
 
       - name: Run Version Update Action (Single Project)
         id: update_sp
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.event_name == 'push' && ! contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
         uses: dragoscirjan/version-update-action@main
         with:
           github_token: "${{ secrets.GH_TOKEN }}"
@@ -61,6 +62,7 @@ jobs:
           workspaces: test/node
 
       - name: Pull Request Debug (Single Project)
+        if: ${{ github.event_name == 'push' && ! contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
         env:
           GH_TOKEN: "${{ secrets.GH_TOKEN }}"
         run: |
@@ -74,7 +76,9 @@ jobs:
 
           gh pr merge $pr_id --squash --auto --delete-branch
 
-          sleep 5
+          echo "Waiting for 2nd PR to end"
+          sleep 20
+          git config pull.rebase false
           git pull 
 
           cat ./test/node/package.json | jq -r '.version'
