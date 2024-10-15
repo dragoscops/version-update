@@ -51,7 +51,7 @@ jobs:
           echo "last_pr_message=${last_pr_message}" >> $GITHUB_OUTPUT
 
       - name: Create Test Commit
-        if: ${{ ! contains(steps.git_info.outputs.last_pr_message, 'version pull request ') }}
+        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, 'version pull request ') }}
         run: |
           date +%s > ./test/node/.update
           git add ./test
