@@ -11,6 +11,9 @@ inputs:
   version_files:
     default: package.json
     description: Version files to look for in each workspace (separated by comma)
+  version_message:
+    default: version pull request
+    description: Version pull request message
   no_pr:
     description: Use pull request to increase the version
   dry_run:
@@ -21,6 +24,7 @@ runs:
   steps:
     - name: Commit Info
       id: git_info
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
         last_commit_message=$(git log -1 --no-merges --pretty=format:%B)
@@ -45,6 +49,7 @@ runs:
 
     - name: Determine Changed Packages
       id: workspaces_info
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
         workspaces_string="${{ inputs.workspaces }}"
@@ -91,6 +96,7 @@ runs:
 
     - name: Version Info
       id: version_info
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
         last_commit_message="${{ steps.git_info.outputs.last_commit_message }}"
@@ -115,6 +121,7 @@ runs:
 
     - name: Commands Warmup
       id: commands_info
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
         command=""
@@ -133,7 +140,7 @@ runs:
         echo "RELEASEIT=${RELEASEIT}" >> $GITHUB_ENV
 
     - name: Increase Versions
-      if: ${{ steps.version_info.outputs.increment && steps.workspaces_info.outputs.changed != '[]' }}
+      if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.workspaces_info.outputs.changed != '[]' }}
       shell: bash
       run: |
         echo '${{ steps.workspaces_info.outputs.changed }}' | jq -c '.[]' | while read ws; do
@@ -170,6 +177,7 @@ runs:
     # TODO: add a step to build changelogs per workspace
 
     - name: Build Versions List
+      if: ${{ github.event_name == 'push' }}
       id: versions_info
       shell: bash
       run: |
@@ -207,7 +215,7 @@ runs:
 
     - name: Prepare Tag
       id: tag_info
-      if: ${{ steps.versions_info.outputs.versions }}
+      if: ${{ github.event_name == 'push' && steps.versions_info.outputs.versions }}
       shell: bash
       run: |
         workspaces_string="${{ inputs.workspaces }}"
@@ -246,6 +254,7 @@ runs:
         echo "tag=$tag" >> $GITHUB_OUTPUT
 
     - name: Set up Git
+      if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
         git config user.name "GitHub Actions"
@@ -260,7 +269,7 @@ runs:
     - name: Create Version Branch
       env:
         GH_TOKEN: ${{ inputs.github_token }}
-      if: ${{ steps.version_info.outputs.increment && steps.versions_info.outputs.versions && ! inputs.no_pr }}
+      if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.versions_info.outputs.versions && ! inputs.no_pr }}
       shell: bash
       run: |
         tag="${{ steps.tag_info.outputs.tag }}"
@@ -273,14 +282,14 @@ runs:
 
           # Commit the changes
           git add .
-          git commit -am "chore: version pull request ${{ steps.tag_info.outputs.tag }}"
+          git commit -am "chore: ${{ inputs.version_message }} ${{ steps.tag_info.outputs.tag }}"
 
           # Push the new branch
           git push origin $version_branch
 
           # Create a pull request
           gh pr create --base main --head $version_branch \
-            --title "version pull request ${{ steps.tag_info.outputs.tag }}" \
+            --title "${{ inputs.version_message }} ${{ steps.tag_info.outputs.tag }}" \
             --body "New Version Proposed"
         else
           echo "No changes to commit. Skipping branch creation."
@@ -297,9 +306,11 @@ runs:
     #     echo "version_commit=1" >> $GITHUB_OUTPUT
 
     - name: Create Tag
-      if: ${{ github.event_name == 'push' && (steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.last_commit_message, 'version pull request')) }}
+      if: ${{ github.event_name == 'push' && contains(steps.git_info.outputs.last_commit_message, inputs.version_message) }}
       shell: bash
       run: |
+        echo "${{ steps.git_info.outputs.last_commit_message }}"
+
         tag="${{ steps.tag_info.outputs.tag }}"
         git fetch --all --tags
 
