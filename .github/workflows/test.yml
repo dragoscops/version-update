@@ -54,7 +54,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Test Commit
-        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, 'version pull request ') }}
+        if: github.event_name != 'pull_request'
         run: |
           date +%s > ./test/node/.update
           git add ./test
@@ -62,6 +62,7 @@ jobs:
 
       - name: Run Version Update Action (${{ matrix.title }})
         id: version_update_action_sp
+        if: github.event_name != 'pull_request'
         uses: dragoscirjan/version-update-action@main
         with:
           workspaces: "${{ matrix.workspaces }}"
