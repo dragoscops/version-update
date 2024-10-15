@@ -25,11 +25,11 @@ runs:
       run: |
         last_commit_message=$(git log -1 --no-merges --pretty=format:%B)
         echo "last_commit_message=${last_commit_message}"
-        echo "last_commit_message=${last_commit_message}" >> $GITHUB_OUTPUT
+        echo "last_commit_message='${last_commit_message}'" >> $GITHUB_OUTPUT
 
         last_pr_message=$(git log -1 --pretty=format:%B)
         echo "last_pr_message=${last_pr_message}"
-        echo "last_pr_message=${last_pr_message}" >> $GITHUB_OUTPUT
+        echo "last_pr_message='${last_pr_message}'" >> $GITHUB_OUTPUT
 
         last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1)
         if [[ -z "$last_tag" ]]; then
