@@ -268,7 +268,9 @@ runs:
         git commit -am "chore: version pull request ${{ steps.tag_info.outputs.tag }}"
 
         git push origin $version_branch
-        gh pr create --base main --head $version_branch --title "version pull request ${{ steps.tag_info.outputs.tag }}" --body "New Version Proposed"
+        gh pr create --base main --head $version_branch \
+          --title "version pull request ${{ steps.tag_info.outputs.tag }}" \
+          --body "New Version Proposed"
 
     # - name: Commit Version
     #   id: version_commit
@@ -279,10 +281,10 @@ runs:
     #     git commit -am "chore: version released ${{ steps.version_info.outputs.versions }}
     #
     #     echo "version_commit=1" >> $GITHUB_OUTPUT
-    #
-    # - name: Create Tag
-    #   if: ${{ steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.pr_message, 'version pull request') }}
-    #   shell: bash
-    #   run: |
-    #     git tag ${{ steps.tag_info.outputs.tag }}
-    #     git pubsh origin ${{ steps.tag_info.outputs.tag }}
+
+    - name: Create Tag
+      if: ${{ steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.pr_message, 'version pull request') }}
+      shell: bash
+      run: |
+        git tag ${{ steps.tag_info.outputs.tag }}
+        git push origin ${{ steps.tag_info.outputs.tag }}
