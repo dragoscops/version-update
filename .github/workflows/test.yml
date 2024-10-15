@@ -5,27 +5,11 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  #  pull_request:
 
 jobs:
   test-version-update-action:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - title: single project
-            workspaces: test/node
-            version_files: package.json
-            commit_tag: feat
-          - title: multi project
-            workspaces: test,test/node,test/node-2
-            version_files: VERSION,package.json,package.json
-            commit_tag: fix
-          - title: multi project, multi lang
-            workspaces: test,test/node,test/node-2
-            version_files: VERSION,package.json,package.json
-            commit_tag: fix
-            no_pr: 1
     env:
       VERSION_MESSAGE: "do the version update"
     steps:
@@ -60,21 +44,39 @@ jobs:
           echo "${last_pr_message}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create Test Commit
+      - name: Create Test Commit (Single Project)
         if: ${{ github.event_name == 'push' && !contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
         run: |
           date +%s > ./test/node/.update
           git add ./test
-          git commit -m "${{ matrix.commit_tag }}: Added a feature"
+          git commit -m "feat: Added a feature"
 
-      - name: Run Version Update Action (${{ matrix.title }})
-        id: version_update_action_sp
+      - name: Run Version Update Action (Single Project)
+        id: update_sp
         if: ${{ github.event_name != 'pull_request' }}
         uses: dragoscirjan/version-update-action@main
         with:
           github_token: "${{ secrets.GH_TOKEN }}"
           # github_token: "${{ secrets.GITHUB_TOKEN }}"
           version_message: "${{ env.VERSION_MESSAGE }}"
-          workspaces: "${{ matrix.workspaces }}"
-          version_files: "${{ matrix.version_files }}"
-          dry_run: true
+          workspaces: test/node
+
+      - name: Pull Request Debug (Single Project)
+        env:
+          GH_TOKEN: "${{ secrets.GH_TOKEN }}"
+        if: ${{ github.event_name == 'push' && !contains(steps.git_info.outputs.last_commit_message, env.VERSION_MESSAGE) }}
+        run: |
+          echo "version_branch=${{ steps.update_sp.outputs.version_branch }}"
+          echo "pr_title=${{ update_sp.outputs.pr_title }}"
+
+          gh pr list --state open
+
+    #       - title: multi project
+    #         workspaces: test,test/node,test/node-2
+    #         version_files: VERSION,package.json,package.json
+    #         commit_tag: fix
+    #       - title: multi project, multi lang
+    #         workspaces: test,test/node,test/node-2
+    #         version_files: VERSION,package.json,package.json
+    #         commit_tag: fix
+    #         no_pr: 1
