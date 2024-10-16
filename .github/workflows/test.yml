@@ -21,10 +21,13 @@ jobs:
           echo "last_pr_message<<EOF" >> $GITHUB_OUTPUT
           echo "${last_pr_message}" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
   test-single-project:
+    needs: prerequisites
     name: Test Single Repo
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
     secrets: inherit
     with:
+      title: Single Repo
       commit_type: feat
       version_message: new single repo version
