@@ -4,7 +4,7 @@ on:
   push: {}
 
 jobs:
-  prerequisites:
+  prereqs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -28,8 +28,8 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
   test-single-repo:
-    if: ${{ ! contains(steps.git_info.outputs.last_commit_message, 'new version') || contains(steps.git_info.outputs.last_commit_message, 'single repo') }}
-    needs: prerequisites
+    if: ${{ ! contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'single repo') }}
+    needs: prereqs
     name: Test Single Repo
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
     secrets: inherit
@@ -39,8 +39,10 @@ jobs:
       version_message: new version single repo
 
   test-multi-repo:
-    if: ${{ ! contains(steps.git_info.outputs.last_commit_message, 'new version') || contains(steps.git_info.outputs.last_commit_message, 'multi repo') }}
-    needs: test-single-repo
+    if: ${{ ! contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'multi repo') }}
+    needs:
+      - prereqs
+      - test-single-repo
     name: Test Multi Repo
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
     secrets: inherit
