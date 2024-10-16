@@ -122,16 +122,26 @@ jobs:
 
           gh pr merge $pr_id --squash --auto --delete-branch
 
-          echo "Waiting for 2nd PR to end"
-          sleep 20
-          git config pull.rebase false
-          git pull 
+          echo "Waiting for 2nd PR to end & vesion tag to be created..."
 
-          git show-ref --tags || true
+          ttl=10
+          wait_time=20
+          attempt=0
+          while [ $attempt -lt $ttl ]; do
+            echo "Checking for tag '$tag' (Attempt $((attempt + 1))/$ttl)..."
 
-          if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
-            echo "Tag '$tag' exists on the remote. Deleting from remote..."
-            git push origin --delete "refs/tags/$tag"
-          else
-            echo "::error::Tag '$tag' does not exist on the remote."
-          fi
+            git fetch --tags
+
+            if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
+              echo "Tag '$tag' found!"
+              exit 0
+            else
+              echo "Tag '$tag' not found. Waiting for $wait_time seconds..."
+              sleep $wait_time
+            fi
+
+            attempt=$((attempt + 1))
+          done
+
+          echo "::error::Tag '$tag' not found after $ttl attempts."
+          exit 1
