@@ -90,6 +90,7 @@ jobs:
       - name: Create Test Commit (Single Project)
         if: ${{ ! contains(steps.git_info.outputs.last_commit_message, inputs.version_message) }}
         run: |
+          git pull origin main 
           date +%s > ./test/node/.update
           git add ./test
           git commit -m "${{ inputs.commit_type }}: Added a feature"
