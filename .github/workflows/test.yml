@@ -5,6 +5,9 @@ on:
 
 jobs:
   test-single-project:
-    name: Test Single Project
+    name: Test Single Repo
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
     secrets: inherit
+    with:
+      commit_type: feat
+      version_message: new single repo version

@@ -3,9 +3,28 @@ name: Test Version Update Action
 on:
   workflow_call:
     inputs:
-      test_run:
-        description: Test to Run
-        default: single-repo
+      title:
+        description: Test Title
+        required: true
+        type: string
+      workspaces:
+        default: test/node
+        description: Workspaces
+        type: string
+      version_files:
+        default: package.json
+        description: Version Files (for Workspaces)
+        type: string
+      commit_type:
+        default: feat
+        description: Type of Commit (Dictates Type of Version Increment)
+        type: string
+      version_message:
+        default: "new version update"
+        description: Message Included in the Version Commit/PR
+        type: string
+      no_pr:
+        description: No Pull Request
         type: string
   workflow_dispatch:
     inputs:
