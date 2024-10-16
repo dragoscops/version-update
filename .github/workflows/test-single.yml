@@ -1,0 +1,128 @@
+name: Test Version Update Action
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_run:
+        description: Test to Run
+        default: single-repo
+        type: choice
+        options:
+          - single-repo
+          - multi-repo
+          - multi-repo,js,go
+          - multi-repo,js,py
+
+jobs:
+  test-version-update-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history so git log works
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Prerequisites
+        id: prereqs
+        run: |
+          test_run="${{ inputs.test_run || 'single-repo' }}"
+
+          case $test_run in
+            single-repo)
+              echo test_title="Single Run" >> $GITHUB_OUTPUT
+              echo test_workspaces="test/node" >> $GITHUB_OUTPUT
+              echo test_version_files="package.json" >> $GITHUB_OUTPUT
+              echo test_commit_tag="feat" >> $GITHUB_OUTPUT
+              echo test_version_message="do the version update" >> $GITHUB_OUTPUT
+            ;;
+            *)
+              echo "::error::Invalid test run"
+              exit 1
+            ;;
+          esac
+
+      #       - title: multi project
+      #         workspaces: test,test/node,test/node-2
+      #         version_files: VERSION,package.json,package.json
+      #         commit_tag: fix
+      #       - title: multi project, multi lang
+      #         workspaces: test,test/node,test/node-2
+      #         version_files: VERSION,package.json,package.json
+      #         commit_tag: fix
+      #         no_pr: 1
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Commit Info
+        id: git_info
+        run: |
+          last_commit_message=$(git log -1 --no-merges --pretty=format:%B)
+          echo "last_commit_message=${last_commit_message}"
+          echo "last_commit_message<<EOF" >> $GITHUB_OUTPUT
+          echo "${last_commit_message}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          last_pr_message=$(git log -1 --pretty=format:%B)
+          echo "last_pr_message=${last_pr_message}"
+          echo "last_pr_message<<EOF" >> $GITHUB_OUTPUT
+          echo "${last_pr_message}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Test Commit (Single Project)
+        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, steps.prereqs.outputs.test_version_message) }}
+        run: |
+          date +%s > ./test/node/.update
+          git add ./test
+          git commit -m "feat: Added a feature"
+
+      - name: Run Version Update Action (${{ steps.prereqs.outputs.test_title }})
+        id: update_sp
+        uses: dragoscirjan/version-update-action@main
+        with:
+          github_token: "${{ secrets.GH_TOKEN }}"
+          # github_token: "${{ secrets.GITHUB_TOKEN }}"
+          version_message: "${{ steps.prereqs.outputs.test_version_message }}"
+          workspaces: "${{ steps.prereqs.outputs.test_workspaces }}"
+          version_files: "${{ steps.prereqs.outputs.test_version_files }}"
+          no_pr: "${{ steps.prereqs.outputs.test_no_pr }}"
+
+      - name: Pull Request Debug (${{ steps.prereqs.outputs.test_title }})
+        if: ${{ ! contains(steps.git_info.outputs.last_commit_message, steps.prereqs.outputs.test_version_message) }}
+        env:
+          GH_TOKEN: "${{ secrets.GH_TOKEN }}"
+        run: |
+          echo "version_branch=${{ steps.update_sp.outputs.version_branch }}"
+          echo "pr_title=${{ steps.update_sp.outputs.pr_title }}"
+          echo "tag=${{ steps.update_sp.outputs.tag }}"
+
+          tag=${{ steps.update_sp.outputs.tag }}
+
+          gh pr list --state open
+          pr_id=$(gh pr list --state open | grep "$version_branch" | grep "$pr_title" | awk -F' ' '{ print $1 }')
+
+          echo pr_id=$pr_id 
+
+          gh pr merge $pr_id --squash --auto --delete-branch
+
+          echo "Waiting for 2nd PR to end"
+          sleep 20
+          git config pull.rebase false
+          git pull 
+
+          git show-ref --tags
+
+          if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag '$tag' exists on the remote. Deleting from remote..."
+            git push origin --delete "refs/tags/$tag"
+          else
+            echo "::error::Tag '$tag' does not exist on the remote."
+          fi
