@@ -127,7 +127,7 @@ jobs:
           git config pull.rebase false
           git pull 
 
-          git show-ref --tags
+          git show-ref --tags || true
 
           if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
             echo "Tag '$tag' exists on the remote. Deleting from remote..."
