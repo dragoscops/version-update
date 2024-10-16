@@ -1,6 +1,12 @@
 name: Test Version Update Action
 
 on:
+  workflow_call:
+    inputs:
+      test_run:
+        description: Test to Run
+        default: single-repo
+        type: string
   workflow_dispatch:
     inputs:
       test_run:
