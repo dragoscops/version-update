@@ -28,6 +28,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
   test-single-repo:
+    if: ${{ ! contains(steps.git_info.outputs.last_commit_message, 'new version') || contains(steps.git_info.outputs.last_commit_message, 'single repo') }}
     needs: prerequisites
     name: Test Single Repo
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
@@ -35,9 +36,10 @@ jobs:
     with:
       title: Single Repo
       commit_type: feat
-      version_message: new single repo version
+      version_message: new version single repo
 
   test-multi-repo:
+    if: ${{ ! contains(steps.git_info.outputs.last_commit_message, 'new version') || contains(steps.git_info.outputs.last_commit_message, 'multi repo') }}
     needs: test-single-repo
     name: Test Multi Repo
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
@@ -45,6 +47,6 @@ jobs:
     with:
       title: Multi Repo
       commit_type: fix
-      version_message: new multi repo version
+      version_message: new version multi repo
       workspaces: test,test/node,test/node-2
       version_files: VERSION,package.json,package.json
