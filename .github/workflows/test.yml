@@ -106,6 +106,7 @@ jobs:
         run: |
           echo "version_branch=${{ steps.update_sp.outputs.version_branch }}"
           echo "pr_title=${{ steps.update_sp.outputs.pr_title }}"
+          echo "tag=${{ steps.update_sp.outputs.tag }}"
 
           gh pr list --state open
           pr_id=$(gh pr list --state open | grep "$version_branch" | grep "$pr_title" | awk -F' ' '{ print $1 }')
@@ -119,4 +120,9 @@ jobs:
           git config pull.rebase false
           git pull 
 
-          cat ./test/node/package.json | jq -r '.version'
+          if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag '$tag' exists on the remote. Deleting from remote..."
+            git push origin --delete "refs/tags/$tag"
+          else
+            echo "::error::Tag '$tag' does not exist on the remote."
+          fi

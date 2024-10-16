@@ -26,6 +26,12 @@ outputs:
   pr_title:
     description: Title of the version pull request
     value: "${{ steps.version_branch.outputs.pr_title }}"
+  tag:
+    description: Tag to have been pushed
+    value: "${{ steps.tag_info.outputs.tag }}"
+  # status:
+  #   description: Status of the version increase
+  #   value: "${{ steps. }}"
 
 runs:
   using: "composite"
@@ -313,6 +319,7 @@ runs:
         echo "version_commit=1" >> $GITHUB_OUTPUT
 
     - name: Create Tag
+      id: tag_create_info
       if: ${{ github.event_name == 'push' && ( steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.last_commit_message, inputs.version_message) ) }}
       shell: bash
       run: |
@@ -323,9 +330,9 @@ runs:
 
         # Ensure the tag doesn't already exist
         if git rev-parse "$tag" >/dev/null 2>&1; then
-          echo "Tag $tag already exists. Skipping tag creation."
+          echo "::error::Tag $tag already exists. Skipping tag creation."
+          exit 1
         else
           git tag "$tag"
           git push origin "$tag"
         fi
-        #
