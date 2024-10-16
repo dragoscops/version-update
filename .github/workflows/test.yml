@@ -11,7 +11,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
       - name: Commit Info
         id: git_info
         run: |
@@ -25,7 +24,9 @@ jobs:
           echo "last_pr_message=${last_pr_message}"
           echo "last_pr_message<<EOF" >> $GITHUB_OUTPUT
           echo "${last_pr_message}" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+    outputs:
+      last_commit_message: ${{ steps.git_info.outputs.last_commit_message }}
+      last_pr_message: ${{ steps.git_info.outputs.last_pr_message }}   echo "EOF" >> $GITHUB_OUTPUT
 
   test-single-repo:
     if: ${{ ! contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'single repo') }}
