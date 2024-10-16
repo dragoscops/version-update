@@ -108,6 +108,8 @@ jobs:
           echo "pr_title=${{ steps.update_sp.outputs.pr_title }}"
           echo "tag=${{ steps.update_sp.outputs.tag }}"
 
+          tag=${{ steps.update_sp.outputs.tag }}
+
           gh pr list --state open
           pr_id=$(gh pr list --state open | grep "$version_branch" | grep "$pr_title" | awk -F' ' '{ print $1 }')
 
@@ -119,6 +121,8 @@ jobs:
           sleep 20
           git config pull.rebase false
           git pull 
+
+          git show-ref --tags
 
           if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
             echo "Tag '$tag' exists on the remote. Deleting from remote..."
