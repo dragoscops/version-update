@@ -1,14 +1,10 @@
 name: Test Version Update Action
 
 on:
-  push:
-    branches:
-      - main
-  #  pull_request:
+  push: {}
 
 jobs:
   test-single-project:
     name: Test Single Project
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml
     secrets: inherit
-    with: {}
