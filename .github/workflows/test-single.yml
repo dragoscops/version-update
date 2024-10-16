@@ -134,6 +134,7 @@ jobs:
 
             if git rev-parse --verify "refs/tags/$tag" >/dev/null 2>&1; then
               echo "Tag '$tag' found!"
+              git push origin --delete "refs/tags/$tag"
               exit 0
             else
               echo "Tag '$tag' not found. Waiting for $wait_time seconds..."
