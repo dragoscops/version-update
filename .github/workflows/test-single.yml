@@ -1,4 +1,4 @@
-name: Test Version Update Action
+name: Test Version Update Action (Single)
 
 on:
   workflow_call:
@@ -51,6 +51,7 @@ on:
       no_pr:
         description: No Pull Request
         type: string
+
 jobs:
   test-version-update-action:
     runs-on: ubuntu-latest
