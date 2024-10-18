@@ -29,16 +29,16 @@ jobs:
       last_commit_message: ${{ steps.git_info.outputs.last_commit_message }}
       last_pr_message: ${{ steps.git_info.outputs.last_pr_message }}
 
-  # test-single-repo:
-  #   if: ${{ !contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'single repo') }}
-  #   needs: prereqs
-  #   name: Test Single Repo
-  #   uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
-  #   secrets: inherit
-  #   with:
-  #     title: Single Repo
-  #     commit_type: feat
-  #     version_message: new version single repo
+  test-single-repo:
+    if: ${{ !contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'single repo') }}
+    needs: prereqs
+    name: Test Single Repo
+    uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
+    secrets: inherit
+    with:
+      title: Single Repo
+      commit_type: feat
+      version_message: new version single repo
 
   test-multi-repo:
     if: ${{ !contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'multi repo') }}
