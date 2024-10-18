@@ -44,7 +44,7 @@ jobs:
     if: ${{ !contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'multi repo') }}
     needs:
       - prereqs
-      - test-single-repo
+      # - test-single-repo
     name: Test Multi Repo
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
     secrets: inherit
