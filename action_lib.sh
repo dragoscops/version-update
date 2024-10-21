@@ -56,6 +56,15 @@ write_version() {
 
   case $version_file in
   # Deno
+  deno.jsonc)
+    sed -i.bak "s/^version\s*=\s*['\"][^'\"]*['\"]/version = \"$version\"/" $version_file
+    ;;
+  mod.ts)
+    sed -i.bak "s/^export\s\+const\s\+VERSION\s*=\s*['\"][^'\"]*['\"]/export const VERSION = \"$version\";/" $version_file
+    ;;
+  version.ts)
+    sed -i.bak "s/^export\s\+const\s\+VERSION\s*=\s*['\"][^'\"]*['\"]/export const VERSION = \"$version\";/" $version_file
+    ;;
   # Generic
   version | VERSION | version.txt | VERSION.txt)
     echo $version >$version_file

@@ -226,7 +226,7 @@ runs:
 
           cd $ws_path
 
-          write_file "$ws_version_file" "$version"
+          write_version "$ws_version_file" "$version"
           echo "$ws_path workspace version increased to $version"
           cd ${{ github.workspace }}
           echo '::endgroup::'
