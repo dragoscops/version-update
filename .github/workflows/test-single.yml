@@ -120,8 +120,8 @@ jobs:
           gh pr list --state open
           pr_id=$(gh pr list --state open | grep "$version_branch" | grep "$pr_title" | awk -F' ' '{ print $1 }')
 
-          echo pr_id=$pr_id 
-
+          echo pr_id=$pr_id
+          git pull origin main
           gh pr merge $pr_id --squash --auto --delete-branch
 
           echo "Waiting for 2nd PR to end & vesion tag to be created..."
