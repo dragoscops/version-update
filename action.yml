@@ -179,18 +179,25 @@ runs:
           # extract version chunks according to semver.org
           read -r ws_version_major ws_version_minor ws_version_patch ws_version_prerelease ws_version_build < <(
             echo "$ws_version" | awk '
-            BEGIN {
-              FS = "[.-+]"
-              OFS = " "
-              match($0, /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$/, arr)
-              major = arr[1]
-              minor = arr[2]
-              patch = arr[3]
-              prerelease = arr[4]
-              build = arr[5]
-              # Print with spaces; empty fields will result in empty strings
-              print major, minor, patch, prerelease, build
-            }'
+              BEGIN {
+                # Corrected character class: hyphen at the beginning to avoid range issues
+                FS = "[-.+]"
+                OFS = " "
+              }
+              {
+                # Use a robust regex to match semantic versioning
+                match($0, /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.+-]+))?(?:\+([0-9A-Za-z.+-]+))?$/, arr)
+                
+                # Assign captured groups to variables
+                major = arr[1]
+                minor = arr[2]
+                patch = arr[3]
+                prerelease = arr[4]
+                build = arr[5]
+                
+                # Print the components separated by spaces
+                print major, minor, patch, prerelease, build
+              }'
           ) 
 
           if [[ -z "$ws_version_major" ]]; then
