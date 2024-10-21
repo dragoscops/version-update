@@ -133,16 +133,11 @@ runs:
         echo "pre_release_id=${pre_release_id}"
         echo "pre_release_id=${pre_release_id}" >> $GITHUB_OUTPUT
 
-    - name: Commands Warmup
+    - name: Commands Warmup (release-it)
       id: commands_info
       if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
-        command=""
-        if [[ -n "${{ inputs.dry_run }}" ]]; then
-          command="echo"
-        fi
-
         # for release-it, will not use npm push, git tag and git push
         RELEASEIT="npx release-it --no-npm.publish --no-git.tag --no-git.push --no-git.commit --no-git.requireCleanWorkingDir --ci"
         RELEASEIT="${RELEASEIT} --increment=${{ steps.version_info.outputs.increment }}"
@@ -175,10 +170,23 @@ runs:
 
               echo "$ws_path workspace version increased to $(cat package.json | jq -r '.version')"
               ;;
+            go.mod)
+              current_version=$(cat go.mod | sed -n 's/^module.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/p')
+              version=${current_version:-0.0.0}
+              version=$(${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION")
+              if [[ -n "$current_version" ]]; then
+                cat go.mod | sed "s/v$current_version/v$version/" > go.mod.tmp
+              else
+                cat go.mod | sed "/^module/s/$/ v$version/" > go.mod.tmp
+              fi
+              cat go.mod.tmp > go.mod
+              rm go.mod.tmp
+              ;;
             version|VERSION|version.txt|VERSION.txt)
               version=$(cat $ws_version_file)
-              if [[ -z "$version" ]]; then version="0.0.0"; fi
-              ${{ env.RELEASEIT }} --pre-changelog "VERSION=$versioin" --post-changelog "echo $VERSION > $ws_version_file"
+              version=${version:-0.0.0}
+              #if [[ -z "$version" ]]; then version="0.0.0"; fi
+              ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION > $ws_version_file"
 
               echo "$ws_path workspace version increased to $(cat $ws_version_file)"
               ;;
@@ -210,6 +218,9 @@ runs:
           case $version_file in
             package.json)
               version=$(cat package.json | jq -r '.version')
+              ;;
+            go.mod)
+              version=$(cat go.mod | sed -n 's/^module.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/p')
               ;;
             version|VERSION|version.txt|VERSION.txt)
               version=$(cat $version_file)
