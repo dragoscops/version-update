@@ -174,9 +174,8 @@ runs:
               current_version=$(sed -n 's/^module.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/p' $ws_version_file)
 
               version=${current_version:-0.0.0}
-              echo version=$version
               touch ./.version
-              ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION > ./.version"
+              ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $version > ./.version"
               version=$(cat ./.version)
               rm ./.version
 
