@@ -171,7 +171,7 @@ runs:
               echo "$ws_path workspace version increased to $(cat package.json | jq -r '.version')"
               ;;
             go.mod)
-              current_version=$(cat $ws_version_file | sed 's/^module.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/p')
+              current_version=$(sed -n 's/^module.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/p' $ws_version_file)
 
               version=${current_version:-0.0.0}
               echo version=$version
