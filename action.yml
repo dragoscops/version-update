@@ -345,6 +345,7 @@ runs:
             cd ${{ github.workspace }}
           done
         fi
+        tag=$(echo $tag | sed -e 's/[^a-zA-Z0-9]/_/g')
 
         echo "tag=$tag"
         echo "tag=$tag" >> $GITHUB_OUTPUT
@@ -370,7 +371,6 @@ runs:
       shell: bash
       run: |
         tag="${{ steps.tag_info.outputs.tag }}"
-        tag=$(echo $tag | sed -e 's/[^a-zA-Z0-9]/_/g')
         version_branch="version_${tag}"
         echo "version_branch=${version_branch}" >> $GITHUB_OUTPUT
 
