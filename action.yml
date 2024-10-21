@@ -82,6 +82,8 @@ runs:
           main_version_file=${version_files_array[0]}
           workspaces_array=("${workspaces_array[@]:1}")
           version_files_array=("${version_files_array[@]:1}")
+          workspaces_array+=($main_workspace)
+          version_files_array+=($main_version_file)
         fi
 
         packages='[]'
@@ -97,6 +99,7 @@ runs:
             changed=1
           fi
 
+          cd $workspace
           version=
           case $version_file in
             package.json)
@@ -109,16 +112,13 @@ runs:
               version=$(cat $version_file)
               ;;
           esac
+          version=${version:-0.0.0}
+          cd ${{ github.workspace }}
 
           packages=$(echo "$packages" | jq --arg pt "$workspace" --arg v "$version" \
             --arg vf "$version_file" --argjson ch "$changed" \
             '. += [{"path": $pt, "version_file": $vf, "version": $v, "changed": $ch}]')
         done
-
-        # if one of the workspaces changes, then project version changes as well
-        if [[ "$packages" != '[]' && -n "$main_workspace" ]]; then
-          packages=$(echo "$packages" | jq --arg pt "$main_workspace" --arg vf "$main_version_file" '. += [{"path": $pt, "version_file": $vf, "changed": 1}]')
-        fi
 
         packages_json=$(echo "$packages" | jq -c '.')
 
