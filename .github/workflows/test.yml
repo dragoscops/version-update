@@ -41,7 +41,10 @@ jobs:
       version_message: new version single repo
 
   test-multi-repo:
-    if: ${{ !contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'multi repo') }}
+    if: ${{
+      always()
+      && ( !contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'multi repo') )
+      }}
     needs:
       - prereqs
       - test-single-repo
