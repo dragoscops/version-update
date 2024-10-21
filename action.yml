@@ -177,13 +177,23 @@ runs:
           echo "::group::Increasing version for workspace $ws_path $ws_version_file $ws_version"
 
           # extract version chunks according to semver.org
-          if [[ $ws_version =~ $ws_regex ]]; then
-            ws_version_major="${BASH_REMATCH[1]}"
-            ws_version_minor="${BASH_REMATCH[2]}"
-            ws_version_patch="${BASH_REMATCH[3]}"
-            ws_version_prerelease="${BASH_REMATCH[4]}"
-            ws_version_build="${BASH_REMATCH[5]}"
-          else
+          read -r ws_version_major ws_version_minor ws_version_patch ws_version_prerelease ws_version_build < <(
+            echo "$version" | awk '
+            BEGIN {
+              FS = "[.-+]"
+              OFS = " "
+              match($0, /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$/, arr)
+              major = arr[1]
+              minor = arr[2]
+              patch = arr[3]
+              prerelease = arr[4]
+              build = arr[5]
+              # Print with spaces; empty fields will result in empty strings
+              print major, minor, patch, prerelease, build
+            }'
+          ) 
+
+          if [[ -z "$ws_version_major" ]]; then
             echo "Invalid semantic version: $version" >&2
             exit 1
           fi
