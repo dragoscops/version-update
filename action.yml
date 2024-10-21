@@ -269,12 +269,15 @@ runs:
       if: ${{ github.event_name == 'push' && steps.versions_info.outputs.versions }}
       shell: bash
       run: |
-        workspaces_string="${{ inputs.workspaces }}"
-        version_files_string="${{ inputs.version_files }}"
-        versions_string='${{ steps.versions_info.outputs.versions }}'
+        source ${{ github.workspace }}/action_lib.sh
 
+        workspaces_string="${{ inputs.workspaces }}"
         IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
+
+        version_files_string="${{ inputs.version_files }}"
         IFS=',' read -r -a version_files_array <<< "$version_files_string"
+
+        versions_string='${{ steps.versions_info.outputs.versions }}'
         IFS=',' read -r -a versions_array <<< "$versions_string"
 
         tag="v${versions_array[0]}"
@@ -288,21 +291,14 @@ runs:
             workspace=${workspaces_array[$i]}
             version_file=${version_files_array[$i]}
             cd $workspace
-            workspace_name=$workspace
-
-            case $version_file in
-              package.json)
-                workspace_name=$(cat $version_file | jq -r '.name')
-                ;;
-            esac
+            workspace_name=$(read_name "$version_file" "$workspace")
             tag="${tag}_${workspace_name}${versions_array[$i]}"
-            #tag="${tag}_$(date +%s)"
 
             cd ${{ github.workspace }}
           done
         fi
-        tag=$(echo $tag | sed -e 's/[^a-zA-Z0-9]/_/g')
 
+        tag=$(echo $tag | sed -e 's/[^a-zA-Z0-9]/_/g')
         echo "tag=$tag"
         echo "tag=$tag" >> $GITHUB_OUTPUT
 

@@ -1,5 +1,57 @@
 #! /bin/bash
 
+read_name() {
+  local version_file="$1"
+  local workspace="$2"
+
+  case $version_file in
+  # Deno
+  deno.jsonc)
+    grep -E '^\s*"name"\s*:\s*["'\'']([^"'\'']+)["'\'']' $version_file |
+      sed -E 's/^.*"name"\s*:\s*["'\'']([^"'\'']+)["'\''].*/\1/'
+    ;;
+  mod.ts)
+    name=$(grep -E '^export\s+const\s+NAME\s*=' $version_file |
+      sed -E 's/^export\s+const\s+NAME\s*=\s*["'\'']([^"'\'']+)["'\''];?/\1/')
+    ;;
+  version.ts)
+    name=$(grep -E '^export\s+const\s+NAME\s*=' $version_file |
+      sed -E 's/^export\s+const\s+NAME\s*=\s*["'\'']([^"'\'']+)["'\''];?/\1/')
+    ;;
+  # Generic
+  name | NAME | name.txt | NAME.txt)
+    name=$(cat $version_file)
+    ;;
+  # Go
+  go.mod)
+    name=$(sed -n 's/^module\s\+\([^ ]\+\)$/\1/p' $version_file)
+    ;;
+  # Node
+  package.json)
+    name=$(jq -r '.name' $version_file)
+    ;;
+  # Python
+  __init__.py)
+    name=$(grep -E '^__version__\s*=' $version_file |
+      sed -E 's/^__version__\s*=\s*["'\'']([^"'\'']+)["'\'']/\1/')
+    ;;
+  setup.py)
+    name=$(grep -E '^\s*name\s*=' $version_file |
+      sed -E 's/^.*name\s*=\s*["'\'']([^"'\'']+)["'\''].*$/\1/')
+    ;;
+  pyproject.toml)
+    name=$(grep -E '^\s*name\s*=' $version_file |
+      sed -E 's/^name\s*=\s*["'\'']([^"'\'']+)["'\'']/\1/')
+    ;;
+  *)
+    echo "::error:: Unsupported name file: $version_file"
+    exit 1
+    ;;
+  esac
+
+  echo ${name:-$workspace}
+}
+
 read_version() {
   local version_file="$1"
 
