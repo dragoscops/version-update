@@ -1,7 +1,7 @@
 #! /bin/bash
 
 read_version() {
-  local $version_file=$1
+  local version_file="$1"
 
   case $version_file in
   # Deno
@@ -51,8 +51,8 @@ read_version() {
 }
 
 write_version() {
-  local $version_file="$1"
-  local $version="$2"
+  local version_file="$1"
+  local version="$2"
 
   case $version_file in
   # Deno
