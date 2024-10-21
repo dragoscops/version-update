@@ -100,6 +100,10 @@ runs:
           fi
 
           cd $workspace
+          if [[ ! -f $version_file ]]; then
+            echo "::error::Missing ${version_file} version file in workspace ${workspace}"
+            exit 1
+          fi
           version=
           case $version_file in
             package.json)
@@ -150,63 +154,94 @@ runs:
         echo "pre_release_id=${pre_release_id}"
         echo "pre_release_id=${pre_release_id}" >> $GITHUB_OUTPUT
 
-    # - name: Increase Versions
-    #   if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.workspaces_info.outputs.packages != '[]' }}
-    #   shell: bash
-    #   run: |
-    #     echo '${{ steps.workspaces_info.outputs.packages }}' | jq -c '.[]' | while read ws; do
-    #       if [[ -z "$ws" ]]; then continue; fi
-    #       ws_path=$(echo "$ws" | jq -r '.path')
-    #       ws_version_file=$(echo "$ws" | jq -r '.version_file')
-    #       echo "::group::Increasing version for workspace $ws_path"
-    #
-    #       cd $ws_path
-    #       if [[ ! -f $ws_version_file ]]; then
-    #         echo "::error::Missing ${ws_version_file} version file in workspace ${ws_path}"
-    #         exit 1
-    #       fi
-    #
-    #       case $ws_version_file in
-    #         package.json)
-    #           ${{ env.RELEASEIT }}
-    #
-    #           echo "$ws_path workspace version increased to $(cat package.json | jq -r '.version')"
-    #           ;;
-    #         go.mod)
-    #           current_version=$(sed -n 's/^module.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/p' $ws_version_file)
-    #
-    #           version=${current_version:-0.0.0}
-    #           touch ./.version
-    #           ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION > ./.version"
-    #           version=$(cat ./.version)
-    #           rm ./.version
-    #
-    #           echo version=$version
-    #           exit 1
-    #
-    #           if [[ -n "$current_version" ]]; then
-    #             cat go.mod | sed "s/v$current_version/v$version/" > go.mod.tmp
-    #           else
-    #             cat go.mod | sed "/^module/s/$/ v$version/" > go.mod.tmp
-    #           fi
-    #           cat go.mod.tmp > go.mod
-    #           rm go.mod.tmp
-    #           ;;
-    #         version|VERSION|version.txt|VERSION.txt)
-    #           version=$(cat $ws_version_file)
-    #           version=${version:-0.0.0}
-    #           #if [[ -z "$version" ]]; then version="0.0.0"; fi
-    #           ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION > $ws_version_file"
-    #
-    #           echo "$ws_path workspace version increased to $(cat $ws_version_file)"
-    #           ;;
-    #       esac
-    #
-    #       cd ${{ github.workspace }}
-    #       echo '::endgroup::'
-    #     done
-    #
-    # # TODO: add a step to build changelogs per workspace
+    - name: Increase Versions
+      if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.workspaces_info.outputs.packages != '[]' }}
+      shell: bash
+      run: |
+        # loop over all packages
+        echo '${{ steps.workspaces_info.outputs.packages }}' | jq -c '.[]' | while read ws; do
+          # if package is empty, continue
+          if [[ -z "$ws" ]]; then continue; fi
+          # if package is not changed, continue
+          ws_changed=$(echo "$ws" | jq -r '.changed // 0')
+          if [[ $ws_changed -eq 0 ]]; then continue; fi
+
+          # extract variables
+          ws_path=$(echo "$ws" | jq -r '.path')
+          ws_version_file=$(echo "$ws" | jq -r '.version_file')
+          ws_version=$(echo "$ws" | jq -r '.version')
+
+          echo "::group::Increasing version for workspace $ws_path"
+
+          # extract version chunks according to semver.org
+          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z\.-]+))?(?:\+([0-9A-Za-z\.-]+))?$ ]]; then
+            ws_version_major="${BASH_REMATCH[1]}"
+            ws_version_minor="${BASH_REMATCH[2]}"
+            ws_version_patch="${BASH_REMATCH[3]}"
+            ws_version_prerelease="${BASH_REMATCH[4]}"
+            ws_version_build="${BASH_REMATCH[5]}"
+          else
+            echo "Invalid semantic version: $version" >&2
+            exit 1
+          fi
+          
+          # increase version chunks according to conventionalcommits.org
+          case "${{ steps.version_info.outputs.increment }}" in
+            major) ws_version_major=$((ws_version_major + 1));;
+            minor) ws_version_minor=$((ws_version_minor + 1));;
+            patch) ws_version_patch=$((ws_version_patch + 1));;
+            *) echo "Invalid increment."; exit 1;;
+          esac
+          
+          # prepare pre-release id if required
+          if [[ -n "${{ steps.version_info.outputs.pre_release_id }}" ]]; then
+            version_prerelease="${{ steps.version_info.outputs.pre_release_id }}"
+            ws_version_build=${ws_version_build:-0}
+            if [[ "$ws_version_prerelease" != "$version_prerelease" ]]; then
+              ws_version_prerelease=$version_prerelease
+              ws_version_build=0
+            fi
+            ws_version_build=$((ws_version_build + 1))
+          else
+            ws_version_prerelease=""
+          fi
+          
+          # compose increased version
+          version="$ws_version_major.$ws_version_minor.$ws_version_patch"
+          if [[ -n "$ws_version_prerelease" ]]; then
+            version="$version-$ws_version_prerelease.$ws_version_build"
+          fi
+
+          cd $ws_path
+          case $ws_version_file in
+            package.json)
+              cat $ws_version_file | jq --arg new_version "$version" '.version = $new_version' > $ws_version_file.tmp
+              cat $ws_version_file.tmp | jq -r '.' | $ws_version_file
+              rm $ws_version_file.tmp
+              ;;
+            go.mod)
+              if [[ -n "$current_version" ]]; then
+                cat $ws_version_file | sed "s/v$current_version/v$version/" > $ws_version_file.tmp
+              else
+                cat $ws_version_file | sed "/^module/s/$/ v$version/" > $ws_version_file.tmp
+              fi
+              cat $ws_version_file.tmp > $ws_version_file
+              rm $ws_version_file.tmp
+              ;;
+            version|VERSION|version.txt|VERSION.txt)
+              echo $version > $ws_version_file
+              ;;
+            *)
+              echo "Invalid version file"
+              exit 1
+              ;;
+          esac
+          echo "$ws_path workspace version increased to $version"
+          cd ${{ github.workspace }}
+          echo '::endgroup::'
+        done
+
+    # TODO: add a step to build changelogs per workspace
     #
     # - name: Build Versions List
     #   if: ${{ github.event_name == 'push' }}
