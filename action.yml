@@ -174,7 +174,7 @@ runs:
           echo "::group::Increasing version for workspace $ws_path"
 
           # extract version chunks according to semver.org
-          if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z\.-]+))?(?:\+([0-9A-Za-z\.-]+))?$ ]]; then
+          if [[ $ws_version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z\.-]+))?(?:\+([0-9A-Za-z\.-]+))?$ ]]; then
             ws_version_major="${BASH_REMATCH[1]}"
             ws_version_minor="${BASH_REMATCH[2]}"
             ws_version_patch="${BASH_REMATCH[3]}"
