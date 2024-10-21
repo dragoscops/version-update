@@ -150,6 +150,8 @@ runs:
       if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.workspaces_info.outputs.packages != '[]' }}
       shell: bash
       run: |
+        source ${{ github.workspace }}/action_lib.sh
+
         ws_regex='^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$'
         # loop over all packages
         echo '${{ steps.workspaces_info.outputs.packages }}' | jq -c '.[]' | while read ws; do
@@ -223,39 +225,8 @@ runs:
           fi
 
           cd $ws_path
-          case $ws_version_file in
-            package.json)
-              cat $ws_version_file | jq --arg new_version "$version" '.version = $new_version' > $ws_version_file.tmp
-              cat $ws_version_file.tmp | jq -r '.' > $ws_version_file
-              rm $ws_version_file.tmp
-              ;;
-            go.mod)
-              current_version=$(sed -n 's/^module.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/p' $version_file)
-              if [[ -n "$current_version" ]]; then
-                cat $ws_version_file | sed "s/v$current_version/v$version/" > $ws_version_file.tmp
-              else
-                cat $ws_version_file | sed "/^module/s/$/ v$version/" > $ws_version_file.tmp
-              fi
-              cat $ws_version_file.tmp > $ws_version_file
-              rm $ws_version_file.tmp
-              ;;
-            __init__.py)
-              sed -i.bak "s/^__version__\s*=\s*['\"][^'\"]*['\"]/__version__ = \"$version\"/" __init__.py
-              ;;
-            setup.py)
-              sed -i.bak "s/^\s*version\s*=\s*['\"][^'\"]*['\"]/    version='$version',/" setup.py
-              ;;
-            # pyproject.toml)
-            #   sed -i.bak "s/^version\s*=\s*['\"][^'\"]*['\"]/version = \"$version\"/" pyproject.toml
-            #   ;;
-            version|VERSION|version.txt|VERSION.txt)
-              echo $version > $ws_version_file
-              ;;
-            *)
-              echo "::error:: Unsupported version file: $version_file"
-              exit 1
-              ;;
-          esac
+
+          write_file "$ws_version_file" "$version"
           echo "$ws_path workspace version increased to $version"
           cd ${{ github.workspace }}
           echo '::endgroup::'
