@@ -158,6 +158,7 @@ runs:
       if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.workspaces_info.outputs.packages != '[]' }}
       shell: bash
       run: |
+        set -ex
         # loop over all packages
         echo '${{ steps.workspaces_info.outputs.packages }}' | jq -c '.[]' | while read ws; do
           # if package is empty, continue
@@ -171,7 +172,7 @@ runs:
           ws_version_file=$(echo "$ws" | jq -r '.version_file')
           ws_version=$(echo "$ws" | jq -r '.version')
 
-          echo "::group::Increasing version for workspace $ws_path"
+          echo "::group::Increasing version for workspace $ws_path $ws_version_file $ws_version"
 
           # extract version chunks according to semver.org
           if [[ $ws_version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z\.-]+))?(?:\+([0-9A-Za-z\.-]+))?$ ]]; then
