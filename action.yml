@@ -103,7 +103,7 @@ runs:
 
         # if one of the workspaces changes, then project version changes as well
         if [[ "$packages" != '[]' && -n "$main_workspace" ]]; then
-          packages=$(echo "$packages" | jq --arg pt "$main_workspace" --arg vf "$main_version_file" '. += [{"path": $pt, "version_file": $vf, "changed": 1}]')
+          # packages=$(echo "$packages" | jq --arg pt "$main_workspace" --arg vf "$main_version_file" '. += [{"path": $pt, "version_file": $vf, "changed": 1}]')
         fi
 
         packages_json=$(echo "$packages" | jq -c '.')
