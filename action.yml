@@ -236,7 +236,7 @@ runs:
           case $ws_version_file in
             package.json)
               cat $ws_version_file | jq --arg new_version "$version" '.version = $new_version' > $ws_version_file.tmp
-              cat $ws_version_file.tmp | jq -r '.' | $ws_version_file
+              cat $ws_version_file.tmp | jq -r '.' > $ws_version_file
               rm $ws_version_file.tmp
               ;;
             go.mod)
