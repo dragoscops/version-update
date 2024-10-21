@@ -177,7 +177,7 @@ runs:
           echo "::group::Increasing version for workspace $ws_path $ws_version_file $ws_version"
 
           # extract version chunks according to semver.org
-          read -r ws_version_major ws_version_minor ws_version_patch ws_version_prerelease ws_version_build < <(
+          read -r ws_version_major ws_version_minor ws_version_patch ws_version_prerelease ws_version_build <<< $(
             echo "$ws_version" | awk '
               BEGIN {
                 # Corrected character class: hyphen at the beginning to avoid range issues
@@ -198,7 +198,7 @@ runs:
                 # Print the components separated by spaces
                 print major, minor, patch, prerelease, build
               }'
-          ) 
+          )
 
           if [[ -z "$ws_version_major" ]]; then
             echo "Invalid semantic version: $version" >&2
