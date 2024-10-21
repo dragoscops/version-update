@@ -172,8 +172,11 @@ runs:
               ;;
             go.mod)
               current_version=$(cat go.mod | sed 's/^module.*v\([0-9]\+\.[0-9]\+\.[0-9]\+\)/\1/p')
+
               version=${current_version:-0.0.0}
-              version=$(${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION")
+              ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION > /tmp/version"
+              version=$(cat /tmp/version)
+
               echo version=$version
               exit 1
 
