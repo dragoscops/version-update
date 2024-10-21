@@ -175,7 +175,7 @@ runs:
 
               version=${current_version:-0.0.0}
               touch ./.version
-              ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $version > ./.version"
+              ${{ env.RELEASEIT }} --pre-changelog "VERSION=$version" --post-changelog "echo $VERSION > ./.version"
               version=$(cat ./.version)
               rm ./.version
 
