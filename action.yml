@@ -159,6 +159,8 @@ runs:
       shell: bash
       run: |
         set -ex
+
+        ws_regex='^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$'
         # loop over all packages
         echo '${{ steps.workspaces_info.outputs.packages }}' | jq -c '.[]' | while read ws; do
           # if package is empty, continue
@@ -175,7 +177,7 @@ runs:
           echo "::group::Increasing version for workspace $ws_path $ws_version_file $ws_version"
 
           # extract version chunks according to semver.org
-          if [[ $ws_version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z\.-]+))?(?:\+([0-9A-Za-z\.-]+))?$ ]]; then
+          if [[ $ws_version =~ $ws_regex ]]; then
             ws_version_major="${BASH_REMATCH[1]}"
             ws_version_minor="${BASH_REMATCH[2]}"
             ws_version_patch="${BASH_REMATCH[3]}"
