@@ -178,7 +178,7 @@ runs:
 
           # extract version chunks according to semver.org
           read -r ws_version_major ws_version_minor ws_version_patch ws_version_prerelease ws_version_build < <(
-            echo "$version" | awk '
+            echo "$ws_version" | awk '
             BEGIN {
               FS = "[.-+]"
               OFS = " "
