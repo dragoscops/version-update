@@ -65,8 +65,8 @@ jobs:
       }}
     needs:
       - prereqs
-      # - test-single-repo
-      # - test-multi-repo
+      - test-single-repo
+      - test-multi-repo
     name: Test Multi Repo Go
     uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
     secrets: inherit
