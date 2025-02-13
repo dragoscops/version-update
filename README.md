@@ -5,7 +5,9 @@
 <!-- ![GitHub Marketplace](https://img.shields.io/badge/available_on-GitHub%20Marketplace-blue) -->
 ![License](https://img.shields.io/github/license/dragoscops/version-update)
 
-Automate the process of versioning your projects with the [Version Update Action](https://github.com/yourusername/version-update). This GitHub Action detects changes in specified workspaces, determines the appropriate version increments based on commit messages following [Conventional Commits](https://www.conventionalcommits.org/), updates version files, manages Git operations like creating branches and pull requests, and tags releases seamlessly.
+Automate the process of versioning your projects with the 
+[Version Update Action](https://github.com/dragoscops/version-update). 
+This GitHub Action detects changes in specified workspaces, determines the appropriate version increments based on commit messages following [Conventional Commits](https://www.conventionalcommits.org/), updates version files, manages Git operations like creating branches and pull requests, and tags releases seamlessly.
 
 ---
 
@@ -123,7 +125,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Version Update
-        uses: yourusername/version-update@v1
+        uses: dragoscops/version-update@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -147,7 +149,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Version Update
-        uses: yourusername/version-update@v1
+        uses: dragoscops/version-update@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workspaces: "packages/frontend,packages/backend"
@@ -174,7 +176,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Version Update
-        uses: yourusername/version-update@v1
+        uses: dragoscops/version-update@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           no_pr: true
@@ -199,7 +201,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Version Update
-        uses: yourusername/version-update@v1
+        uses: dragoscops/version-update@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dry_run: true
