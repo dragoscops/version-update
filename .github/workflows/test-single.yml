@@ -97,7 +97,7 @@ jobs:
 
       - name: Run Version Update Action (${{ inputs.title }})
         id: version_update_info
-        uses: dragoscirjan/version-update@main
+        uses: dragoscops/version-update@main
         with:
           github_token: "${{ secrets.GH_TOKEN }}"
           # github_token: "${{ secrets.GITHUB_TOKEN }}"
