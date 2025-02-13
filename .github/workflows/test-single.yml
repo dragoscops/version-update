@@ -53,7 +53,7 @@ on:
         type: string
 
 jobs:
-  test-version-update-action:
+  test-version-update:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -90,14 +90,14 @@ jobs:
       - name: Create Test Commit (Single Project)
         if: ${{ ! contains(steps.git_info.outputs.last_commit_message, inputs.version_message) }}
         run: |
-          git pull origin main 
+          git pull origin main
           date +%s > ./test/node/.update
           git add ./test
           git commit -m "${{ inputs.commit_type }}: Added a feature"
 
       - name: Run Version Update Action (${{ inputs.title }})
         id: version_update_info
-        uses: dragoscirjan/version-update-action@main
+        uses: dragoscirjan/version-update@main
         with:
           github_token: "${{ secrets.GH_TOKEN }}"
           # github_token: "${{ secrets.GITHUB_TOKEN }}"

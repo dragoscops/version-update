@@ -33,7 +33,7 @@ jobs:
     if: ${{ !contains(needs.prereqs.outputs.last_commit_message, 'new version') || contains(needs.prereqs.outputs.last_commit_message, 'single repo') }}
     needs: prereqs
     name: Test Single Repo
-    uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
+    uses: dragoscirjan/version-update/.github/workflows/test-single.yml@main
     secrets: inherit
     with:
       title: Single Repo
@@ -49,7 +49,7 @@ jobs:
       - prereqs
       - test-single-repo
     name: Test Multi Repo
-    uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
+    uses: dragoscirjan/version-update/.github/workflows/test-single.yml@main
     secrets: inherit
     with:
       title: Multi Repo
@@ -68,7 +68,7 @@ jobs:
       - test-single-repo
       - test-multi-repo
     name: Test Multi Repo Go
-    uses: dragoscirjan/version-update-action/.github/workflows/test-single.yml@main
+    uses: dragoscirjan/version-update/.github/workflows/test-single.yml@main
     secrets: inherit
     with:
       title: Multi Repo Go

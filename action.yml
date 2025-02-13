@@ -1,4 +1,4 @@
-name: version-update-action
+name: version-update
 description: Github Action for Updating Versions
 
 inputs:
@@ -179,14 +179,14 @@ runs:
               {
                 # Use a robust regex to match semantic versioning
                 match($0, /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.+-]+))?(?:\+([0-9A-Za-z.+-]+))?$/, arr)
-                
+
                 # Assign captured groups to variables
                 major = arr[1]
                 minor = arr[2]
                 patch = arr[3]
                 prerelease = arr[4]
                 build = arr[5]
-                
+
                 # Print the components separated by spaces
                 print major, minor, patch, prerelease, build
               }'
@@ -196,7 +196,7 @@ runs:
             echo "Invalid semantic version: $version" >&2
             exit 1
           fi
-          
+
           # increase version chunks according to conventionalcommits.org
           case "${{ steps.version_info.outputs.increment }}" in
             major) ws_version_major=$((ws_version_major + 1));;
@@ -204,7 +204,7 @@ runs:
             patch) ws_version_patch=$((ws_version_patch + 1));;
             *) echo "Invalid increment."; exit 1;;
           esac
-          
+
           # prepare pre-release id if required
           if [[ -n "${{ steps.version_info.outputs.pre_release_id }}" ]]; then
             version_prerelease="${{ steps.version_info.outputs.pre_release_id }}"
@@ -217,7 +217,7 @@ runs:
           else
             ws_version_prerelease=""
           fi
-          
+
           # compose increased version
           version="$ws_version_major.$ws_version_minor.$ws_version_patch"
           if [[ -n "$ws_version_prerelease" ]]; then
