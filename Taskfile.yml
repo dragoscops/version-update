@@ -1,0 +1,46 @@
+version: "3"
+
+tasks:
+  test:bootstrap:
+    cmds:
+      - |
+        if [ ! -d "test/bats" ]; then
+          mkdir -p test &&
+          git submodule add -b master https://github.com/bats-core/bats-core.git test/bats;
+        else
+          echo "test/bats already exists. Skipping...";
+        fi
+      - |
+        if [ ! -d "test/test_helper/bats-support" ]; then
+          mkdir -p test/test_helper &&
+          git submodule add -b master https://github.com/bats-core/bats-support.git test/test_helper/bats-support;
+        else
+          echo "test/test_helper/bats-support already exists. Skipping...";
+        fi
+      - |
+        if [ ! -d "test/test_helper/bats-assert" ]; then
+          mkdir -p test/test_helper &&
+          git submodule add -b master https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert;
+        else
+          echo "test/test_helper/bats-assert already exists. Skipping...";
+        fi
+      - git submodule update --init --recursive --remote
+    desc: Download Internal Dependencies
+    generates:
+      - test/bats
+      - test/test_helper/bats-support
+      - test/test_helper/bats-assert
+    internal: true
+    summary: |
+      Initializes git submodules (tracking the latest commit on the 'master' branch) and downloads project dependencies:
+        - bats-core for unit testing (https://github.com/bats-core/bats-core)
+        - bats-support for helper functions
+        - bats-assert for assertions
+
+  test:
+    deps: [test:bootstrap]
+    desc: Run Unit Tests
+    summary: |
+      Executes the test suite using bats.
+    cmds:
+      - ./test/bats/bin/bats test/*.bats
