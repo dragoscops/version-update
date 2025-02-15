@@ -1,0 +1,21 @@
+name: Test Version Update Action
+
+on:
+  push: {}
+
+jobs:
+  prereqs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Tests
+        run: |
+          task test

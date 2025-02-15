@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
 
-update_node_version() {
+node_update_version() {
+  fail_at_missing_command jq
+
   local new_version="$1"
   local updated=0
-
-  # Check if jq is available
-  if ! command -v jq >/dev/null; then
-    do_error "'jq' application is missing"
-  fi
 
   for file in package.json jsr.json; do
     if [ -f $file ]; then
@@ -24,7 +21,9 @@ update_node_version() {
   fi
 }
 
-update_deno_version() {
+deno_update_version() {
+  fail_at_missing_command jq
+
   local new_version="$1"
   local updated=0
 
@@ -38,62 +37,73 @@ update_deno_version() {
     fi
   done
 
+  if [ -f deno.jsonc ]; then
+    deno eval "const file = await Deno.readTextFile('deno.jsonc'); \
+      const data = JSON.parse(file.replace(/\/\/.*$/gm, '')); \
+      data.version = '2.0.0'; \
+      await Deno.writeTextFile('deno.jsonc', JSON.stringify(data, null, 2));"
+
+    updated=$((updated + 1))
+  fi
+
   if [ $updated -eq 0 ]; then
     do_error 'Unable to update node version; deno.json, deno.jsonc, jsr.json, package.json missing'
   fi
 }
 
-# update_go_version() {
-#   local new_version="$1"
-#   local updated=0
+go_update_version() {
+  local new_version="$1"
+  local updated=0
+  if [ -f "go.mod" ]; then
+    # On macOS, use -i '' for in‑place editing.
+    sed -i '' -E 's/^(module[[:space:]]+[^[:space:]]+)([[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+)?/\1 v'"${new_version}"'/' go.mod && updated=1
+  fi
+  [ $updated -eq 1 ] || do_error "No version information updated in go.mod"
+}
 
-#   if [ -f "version.go" ]; then
-#     sed -i -E "s/(const[[:space:]]+Version[[:space:]]*=[[:space:]]*['\"])[^\"]+(['\"])/\1${new_version}\2/" version.go &&
-#     updated=1
-#   fi
+# # python_update_version() {
+# #   local new_version="$1"
+# #   local updated=0
 
-#   if [ $updated -eq 0 ] && [ -f "go.mod" ]; then
-#     # Update the version at the end of the module line.
-#     sed -i -E "s/^(module[[:space:]]+[^[:space:]]+[[:space:]]+)v[0-9]+\.[0-9]+\.[0-9]+/\1${new_version}/" go.mod &&
-#     updated=1
-#   fi
+# #   if [ -f "__init__.py" ]; then
+# #     sed -i -E "s/(^[[:space:]]*__version__[[:space:]]*=[[:space:]]*['\"])[^'\"]+(['\"][[:space:]]*$)/\1${new_version}\2/" __init__.py &&
+# #     updated=1
+# #   fi
 
-#   [ $updated -eq 1 ] || do_error "No version information updated in version.go or go.mod"
-# }
+# #   if [ $updated -eq 0 ] && [ -f "setup.py" ]; then
+# #     sed -i -E "s/(version[[:space:]]*=[[:space:]]*['\"])[^'\"]+(['\"])/\1${new_version}\2/" setup.py &&
+# #     updated=1
+# #   fi
 
-# update_python_version() {
-#   local new_version="$1"
-#   local updated=0
+# #   if [ $updated -eq 0 ] && [ -f "pyproject.toml" ]; then
+# #     sed -i -E "s/(^[[:space:]]*version[[:space:]]*=[[:space:]]*['\"])[^'\"]+(['\"][[:space:]]*$)/\1${new_version}\2/" pyproject.toml &&
+# #     updated=1
+# #   fi
 
-#   if [ -f "__init__.py" ]; then
-#     sed -i -E "s/(^[[:space:]]*__version__[[:space:]]*=[[:space:]]*['\"])[^'\"]+(['\"][[:space:]]*$)/\1${new_version}\2/" __init__.py &&
-#     updated=1
-#   fi
+# #   [ $updated -eq 1 ] || do_error "No version file found in __init__.py, setup.py, or pyproject.toml"
+# # }
 
-#   if [ $updated -eq 0 ] && [ -f "setup.py" ]; then
-#     sed -i -E "s/(version[[:space:]]*=[[:space:]]*['\"])[^'\"]+(['\"])/\1${new_version}\2/" setup.py &&
-#     updated=1
-#   fi
+# # TODO: Not sure how to update a cargo project yet
+# # https://medium.com/codex/rust-modules-and-project-structure-832404a33e2e
+# # rust_update_version() {
+# #   local new_version="$1"
+# #   if [ ! -f "Cargo.toml" ]; then
+# #     do_error "Cargo.toml not found"
+# #   fi
 
-#   if [ $updated -eq 0 ] && [ -f "pyproject.toml" ]; then
-#     sed -i -E "s/(^[[:space:]]*version[[:space:]]*=[[:space:]]*['\"])[^'\"]+(['\"][[:space:]]*$)/\1${new_version}\2/" pyproject.toml &&
-#     updated=1
-#   fi
+# #   if ! command -v cargo > /dev/null; then
+# #     # https://doc.rust-lang.org/cargo/getting-started/installation.html
+# #     curl https://sh.rustup.rs -sSf | sh
+# #   fi
 
-#   [ $updated -eq 1 ] || do_error "No version file found in __init__.py, setup.py, or pyproject.toml"
-# }
+# #   # https://github.com/killercup/cargo-edit
+# #   cargo --list | grep set-version > /dev/null || cargo install cargo-edit
 
-# update_rust_version() {
-#   local new_version="$1"
-#   if [ ! -f "Cargo.toml" ]; then
-#     do_error "Cargo.toml not found"
-#   fi
+# #   cargo set-version "$new_version" Cargo.toml \
+# #     || do_error 'Failed to update Cargo.toml'
+# # }
 
-#   sed -i -E "s/(^[[:space:]]*version[[:space:]]*=[[:space:]]*['\"])[^'\"]+(['\"][[:space:]]*$)/\1${new_version}\2/" Cargo.toml ||
-#     do_error "Failed to update version in Cargo.toml"
-# }
-
-# update_text_version() {
+# text_update_version() {
 #   local new_version="$1"
 #   local version_files=("version" "VERSION" "version.txt" "VERSION.txt")
 #   local file found=0
@@ -106,5 +116,7 @@ update_deno_version() {
 #     fi
 #   done
 
-#   [ $found -eq 1 ] || do_error "No version file found (version, VERSION, version.txt, or VERSION.txt)"
+#   if [ $found -ne 1 ]; then
+#     do_error "No version file found (version, VERSION, version.txt, or VERSION.txt)"
+#   fi
 # }
