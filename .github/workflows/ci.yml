@@ -29,8 +29,8 @@ jobs:
           go-version: ">=1.17.0"
       - name: Install Dependencies
         run: |
-          apt update
-          apt install -y jq
+          sudo apt update
+          sudo apt install -y jq yq
       - name: Run Tests
         run: |
           task test
