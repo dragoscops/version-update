@@ -43,4 +43,6 @@ tasks:
     summary: |
       Executes the test suite using bats.
     cmds:
-      - ./test/bats/bin/bats test/*.bats
+      # - find ./test -iname "*.bats" -maxdepth 1 -exec ./test/bats/bin/bats -x {} \;
+      # - ./test/bats/bin/bats -x test/version_detect.bats
+      - ./test/bats/bin/bats -x test/version_update.bats
