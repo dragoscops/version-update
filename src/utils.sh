@@ -7,3 +7,14 @@ fail_at_missing_command() {
     do_error "'$command' application is missing"
   fi
 }
+
+which_python() {
+  if command -v "python3" >/dev/null; then
+    echo python3
+    return
+  fi
+  if command -v "python" >/dev/null; then
+    echo python
+    return
+  fi
+}

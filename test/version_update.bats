@@ -11,27 +11,9 @@ setup() {
 }
 
 teardown() {
-  for folder in node deno go; do
+  for folder in cargo deno go node python rust; do
     rm -rf /tmp/$folder
   done
-}
-
-@test "node_update_version outputs correct version from jsr.json" {
-  mkdir -p /tmp/node && cd /tmp/node && npm init -y && cp package.json jsr.json
-
-  run node_update_version "2.0.0"
-  run node_detect_version
-  [ "$status" -eq 0 ]
-  [ "$output" = "2.0.0" ]
-}
-
-@test "node_update_version outputs correct version from package.json if jsr.json absent" {
-  mkdir -p /tmp/node && cd /tmp/node && npm init -y
-
-  run node_update_version "2.0.0"
-  run node_detect_version
-  [ "$status" -eq 0 ]
-  [ "$output" = "2.0.0" ]
 }
 
 @test "deno_update_version outputs correct version from jsr.json" {
@@ -97,55 +79,110 @@ teardown() {
   [ "$output" = "2.0.0" ]
 }
 
-# # @test "python_update_version updates __init__.py" {
-# #   # Create a dummy __init__.py with version "1.0.0"
-# #   echo '__version__ = "1.0.0"' > __init__.py
-# #   python_update_version "2.0.0"
-# #   run python_detect_version
-# #   [ "$status" -eq 0 ]
-# #   [ "$output" = "2.0.0" ]
-# # }
+@test "node_update_version outputs correct version from jsr.json" {
+  mkdir -p /tmp/node && cd /tmp/node && npm init -y && cp package.json jsr.json
 
-# # @test "python_update_version updates setup.py when __init__.py is absent" {
-# #   rm -f __init__.py
-# #   echo 'setup(name="example", version="1.0.0")' > setup.py
-# #   python_update_version "2.0.0"
-# #   run python_detect_version
-# #   [ "$status" -eq 0 ]
-# #   [ "$output" = "2.0.0" ]
-# # }
+  run node_update_version "2.0.0"
+  run node_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "2.0.0" ]
+}
 
-# # @test "python_update_version updates pyproject.toml when others are absent" {
-# #   rm -f __init__.py setup.py
-# #   echo 'version = "1.0.0"' > pyproject.toml
-# #   python_update_version "2.0.0"
-# #   run python_detect_version
-# #   [ "$status" -eq 0 ]
-# #   [ "$output" = "2.0.0" ]
-# # }
+@test "node_update_version outputs correct version from package.json if jsr.json absent" {
+  mkdir -p /tmp/node && cd /tmp/node && npm init -y
 
-# # @test "rust_update_version updates Cargo.toml" {
-# #   # Create a dummy Cargo.toml with version "1.0.0"
-# #   cat <<EOF > /tmp/Cargo.toml
-# # [package]
-# # name = "example"
-# # version = "1.0.0"
-# # EOF
-# #   cd /tmp
+  run node_update_version "2.0.0"
+  run node_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "2.0.0" ]
+}
 
-# #   rust_update_version "2.0.0"
-# #   run rust_detect_version
-# #   [ "$status" -eq 0 ]
-# #   [ "$output" = "2.0.0" ]
-# # }
+@test "python_detect_version version from pyproject.toml (flit or setuptools)" {
+  mkdir -p /tmp/python && cd /tmp/python && cat > pyproject.toml <<EOF
+[project]
+name = "mypackage"
+version = "3.2.0"
+dependencies = [
+    "requests",
+    'importlib-metadata; python_version<"3.10"',
+]
+EOF
 
-# @test "text_update_version updates version file" {
-#   # Create a dummy version file (using version.txt)
-#   echo "1.0.0" > /tmp/version.txt
-#   cd /tmp
+  run python_update_version "3.3.0"
+  run python_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "3.3.0" ]
+}
 
-#   text_update_version "2.0.0"
-#   run text_detect_version
-#   [ "$status" -eq 0 ]
-#   [ "$output" = "2.0.0" ]
-# }
+@test "python_detect_version version from pyproject.toml (poetry)" {
+  mkdir -p /tmp/python && cd /tmp/python && cat > pyproject.toml <<EOF
+[tool.poetry]
+name = "pycounts"
+version = "3.2.0"
+description = "Calculate word counts in a text file!"
+authors = ["Tomas Beuzen"]
+license = "MIT"
+readme = "README.md"
+EOF
+
+  run python_update_version "3.3.0"
+  run python_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "3.3.0" ]
+}
+
+@test "python_update_version version from setup.cfg if pyproject.toml is missing" {
+  mkdir -p /tmp/python && cd /tmp/python && cat > setup.cfg <<EOF
+[metadata]
+name = mypackage
+version = 3.2.0
+
+[options]
+install_requires =
+    requests
+    importlib-metadata; python_version<"3.10"
+EOF
+
+  run python_update_version "3.3.0"
+  run python_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "3.3.0" ]
+}
+
+@test "python_update_version version from setup.py if pyproject.toml, setup.cfg missing" {
+  mkdir -p /tmp/python && cd /tmp/python && cat > setup.py <<EOF
+from setuptools import setup
+
+setup(
+    name='mypackage',
+    version='3.2.0',
+    install_requires=[
+        'requests',
+        'importlib-metadata; python_version<"3.10"',
+    ],
+)
+EOF
+
+  run python_update_version "3.3.0"
+  run python_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "3.3.0" ]
+}
+
+@test "rust_update_version updates Cargo.toml" {
+  mkdir -p /tmp/cargo && cd /tmp/cargo && cargo init > /dev/null
+
+  run rust_update_version "2.0.0"
+  run rust_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "2.0.0" ]
+}
+
+@test "text_update_version updates version file" {
+  mkdir -p /tmp/test && cd /tmp/test && echo "1.0.0" > version.txt
+
+  run text_update_version "2.0.0"
+  run text_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "2.0.0" ]
+}

@@ -1,18 +1,5 @@
 #!/usr/bin/env bash
 
-node_detect_version() {
-  fail_at_missing_command jq
-
-  for file in jsr.json package.json; do
-    if [ -f $file ]; then
-      jq -r '.version // "0.0.1"' "$file"
-      return
-    fi
-  done
-
-  do_error "No version information found in jsr.json, package.json"
-}
-
 deno_detect_version() {
   fail_at_missing_command jq
 
@@ -47,72 +34,118 @@ go_detect_version() {
   do_error "No version information found in version.go or go.mod"
 }
 
-# python_detect_version() {
-#   # Check __init__.py for a __version__ variable declaration.
-#   if [ -f "__init__.py" ]; then
-#     version=$(grep -E '__version__\s*=\s*["'\'']([^"\'']+)["'\'']' __init__.py |
-#       sed -nE "s/^[[:space:]]*__version__[[:space:]]*=[[:space:]]*['\"]([^'\"]+)['\"].*$/\1/p")
-#     if [ -n "$version" ]; then
-#       echo "$version"
-#       return
-#     fi
-#   fi
+node_detect_version() {
+  fail_at_missing_command jq
 
-#   # Fallback: Check setup.py for a version parameter in the setup() call.
-#   if [ -f "setup.py" ]; then
-#     version=$(grep -E 'version\s*=\s*["'\'']([^"\'']+)["'\'']' setup.py | head -n 1 | sed -E 's/.*version\s*=\s*["'\'']([^"\'']+)["'\''].*/\1/')
-#     if [ -n "$version" ]; then
-#       echo "$version"
-#       return
-#     fi
-#   fi
+  for file in jsr.json package.json; do
+    if [ -f $file ]; then
+      jq -r '.version // "0.0.1"' "$file"
+      return
+    fi
+  done
 
-#   # Fallback: Check pyproject.toml for a version key.
-#   if [ -f "pyproject.toml" ]; then
-#     if ! command -v yq > /dev/null; then
-#       do_error "'yq' application is missing"
-#     fi
+  do_error "No version information found in jsr.json, package.json"
+}
 
-#     yq e '.project.version' pyproject.toml
-#     return
-#   fi
+#
+# @see https://python-poetry.org/docs/basic-usage/
+# @see https://flit.pypa.io/en/stable/
+# @see https://setuptools.pypa.io/en/latest/userguide/quickstart.html
+python_detect_version() {
+  python_detect_version_pyproject_toml && return
+  python_detect_version_setup_cfg && return
+  python_detect_version_setup_py && return
 
-#   do_error "No version information found in __init__.py, setup.py, or pyproject.toml"
-# }
+  do_error "No version information found in __init__.py, setup.py, or pyproject.toml"
+}
 
-# # TODO: see version_update.sh
-# # rust_detect_version() {
-# #   # Ensure Cargo.toml exists
-# #   if [ ! -f "Cargo.toml" ]; then
-# #     do_error "Cargo.toml not found"
-# #   fi
+python_detect_version_pyproject_toml() {
+  if [ -f "pyproject.toml" ]; then
+    PY_VENV=${PY_VENV:-.venv}
+    py=$(which_python)
+    [ -d "$PY_VENV" ] || $py -m venv $PY_VENV
+    source $PY_VENV/bin/activate
+    python -m pip -q install toml -q
 
-# #   if ! command -v yq > /dev/null; then
-# #     do_error "'yq' application is missing"
-# #   fi
+    python <<'EOF'
+import sys
+import toml
 
-# #   yq e '.package.version' Cargo.toml
-# # }
+with open("pyproject.toml") as f:
+  data = toml.loads(f.read())
+  version = (data.get("project", {}).get("version")
+             or data.get("tool", {}).get("poetry", {}).get("version")
+             or "0.0.1")
+  print(version)
+EOF
+    return 0
+  fi
+  return 1
+}
 
-# text_detect_version() {
-#   # List of candidate version file names
-#   local version_files=("version" "VERSION" "version.txt" "VERSION.txt")
-#   local file version
+python_detect_version_setup_cfg() {
+  if [ -f "setup.cfg" ]; then
+    PY_VENV=${PY_VENV:-.venv}
+    py=$(which_python)
+    [ -d "$PY_VENV" ] || $py -m venv $PY_VENV
+    source $PY_VENV/bin/activate
+    python -m pip -q install configparser -q
 
-#   # Loop over each candidate file
-#   for file in "${version_files[@]}"; do
-#     if [ -f "$file" ]; then
-#       # Read the first non-empty line from the file and trim whitespace
-#       version=$(grep -m 1 . "$file" | tr -d ' \t\n\r')
-#       if [ -n "$version" ]; then
-#         echo "$version"
-#         return 0
-#       fi
-#     fi
-#   done
+    python <<'EOF'
+import configparser
 
-#   do_error "No version information found in any version file (version, VERSION, version.txt, or VERSION.txt)"
-# }
+config = configparser.ConfigParser()
+config.read("setup.cfg")
+version = config.get("metadata", "version", fallback="0.0.1")
+print(version)
+EOF
+    return 0
+  fi
+  return 1
+}
+
+python_detect_version_setup_py() {
+  if [ -f "setup.py" ]; then
+    version=$(cat setup.py | egrep "version\s*=\s*[\"']" | awk '{$1=$1; print}' | sed -E "s/version\s*=\s*[\"']([^\"']+)[\"'].*/\1/")
+    version=${version:-0.0.1}
+    echo "$version"
+    return 0
+  fi
+  return 1
+}
+
+rust_detect_version() {
+  # Ensure Cargo.toml exists
+  if [ ! -f "Cargo.toml" ]; then
+    do_error "Cargo.toml not found"
+  fi
+
+  if ! command -v yq > /dev/null; then
+    do_error "'yq' application is missing"
+  fi
+
+  yq e '.package.version' Cargo.toml
+}
+
+text_detect_version() {
+  # List of candidate version file names
+  local version_files=("version" "VERSION" "version.txt" "VERSION.txt")
+  local file version
+
+  # Loop over each candidate file
+  for file in "${version_files[@]}"; do
+    if [ -f "$file" ]; then
+      # Read the first non-empty line from the file and trim whitespace
+      version=$(grep -m 1 . "$file" | tr -d ' \t\n\r')
+      if [ -n "$version" ]; then
+        echo "$version"
+        return 0
+      fi
+    fi
+  done
+
+  do_error "No version information found in any version file (version, VERSION, version.txt, or VERSION.txt)"
+}
 
 # # zig_detect_version() {
 # #   if [ -f "build.zig" ]; then

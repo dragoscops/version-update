@@ -10,25 +10,9 @@ setup() {
 }
 
 teardown() {
-  for folder in node deno go; do
+  for folder in cargo deno go node python rust; do
     rm -rf /tmp/$folder
   done
-}
-
-@test "node_detect_version outputs correct version from jsr.json" {
-  mkdir -p /tmp/node && cd /tmp/node && npm init -y && cp package.json jsr.json
-
-  run node_detect_version
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.0.0" ]
-}
-
-@test "node_detect_version outputs correct version from package.json if jsr.json absent" {
-  mkdir -p /tmp/node && cd /tmp/node && npm init -y
-
-  run node_detect_version
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.0.0" ]
 }
 
 @test "deno_detect_version outputs correct version from jsr.json" {
@@ -88,49 +72,106 @@ teardown() {
   [ "$output" = "1.0.0" ]
 }
 
-# @test "python_detect_version outputs correct version from __init__.py" {
-#   echo '__version__ = "3.0.0"' > /tmp/__init__.py
-#   cd /tmp
-#   run python_detect_version
-#   [ "$status" -eq 0 ]
-#   [ "$output" = "3.0.0" ]
-# }
+@test "node_detect_version outputs correct version from jsr.json" {
+  mkdir -p /tmp/node && cd /tmp/node && npm init -y && cp package.json jsr.json
 
-# @test "python_detect_version outputs correct version from setup.py if __init__.py absent" {
-#   echo 'setup(name="example", version="3.1.0")' > /tmp/setup.py
-#   cd /tmp
-#   run python_detect_version
-#   [ "$status" -eq 0 ]
-#   [ "$output" = "3.1.0" ]
-# }
+  run node_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "1.0.0" ]
+}
 
-# @test "python_detect_version outputs correct version from pyproject.toml if others absent" {
-#   echo "[project]
-# version = \"3.2.0\"" > /tmp/pyproject.toml
-#   cd /tmp
-#   run python_detect_version
-#   [ "$status" -eq 0 ]
-#   [ "$output" = "3.2.0" ]
-# }
+@test "node_detect_version outputs correct version from package.json if jsr.json absent" {
+  mkdir -p /tmp/node && cd /tmp/node && npm init -y
 
-# # @test "rust_detect_version outputs correct version from Cargo.toml" {
-# #   echo '[package]
-# # name = "example"
-# # version = "0.5.0"
-# # ' > /tmp/Cargo.toml
-# #   cd /tmp
-# #   run rust_detect_version
-# #   [ "$status" -eq 0 ]
-# #   [ "$output" = "0.5.0" ]
-# # }
+  run node_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "1.0.0" ]
+}
 
-# @test "text_detect_version outputs correct version from version file" {
-#   echo "4.0.0" > /tmp/version.txt
-#   cd /tmp
-#   run text_detect_version
-#   [ "$status" -eq 0 ]
-#   [ "$output" = "4.0.0" ]
-# }
+@test "python_detect_version outputs correct version from pyproject.toml (flit or setuptools)" {
+  mkdir -p /tmp/python && cd /tmp/python && cat > pyproject.toml <<EOF
+[project]
+name = "mypackage"
+version = "3.2.0"
+dependencies = [
+    "requests",
+    'importlib-metadata; python_version<"3.10"',
+]
+EOF
+
+  run python_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "3.2.0" ]
+}
+
+@test "python_detect_version outputs correct version from pyproject.toml (poetry)" {
+  mkdir -p /tmp/python && cd /tmp/python && cat > pyproject.toml <<EOF
+[tool.poetry]
+name = "pycounts"
+version = "3.2.0"
+description = "Calculate word counts in a text file!"
+authors = ["Tomas Beuzen"]
+license = "MIT"
+readme = "README.md"
+EOF
+
+  run python_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "3.2.0" ]
+}
+
+@test "python_detect_version outputs correct version from setup.cfg if pyproject.toml is missing" {
+  mkdir -p /tmp/python && cd /tmp/python && cat > setup.cfg <<EOF
+[metadata]
+name = mypackage
+version = 3.2.0
+
+[options]
+install_requires =
+    requests
+    importlib-metadata; python_version<"3.10"
+EOF
+
+  run python_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "3.2.0" ]
+}
+
+@test "python_detect_version outputs correct version from setup.py if pyproject.toml, setup.cfg missing" {
+  mkdir -p /tmp/python && cd /tmp/python && cat > setup.py <<EOF
+from setuptools import setup
+
+setup(
+    name='mypackage',
+    version='3.2.0',
+    install_requires=[
+        'requests',
+        'importlib-metadata; python_version<"3.10"',
+    ],
+)
+EOF
+
+  run python_detect_version
+  echo "$output"
+  [ "$status" -eq 0 ]
+  [ "$output" = "3.2.0" ]
+}
+
+@test "rust_detect_version outputs correct version from Cargo.toml" {
+  mkdir -p /tmp/cargo && cd /tmp/cargo && cargo init > /dev/null
+
+  run rust_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "0.1.0" ]
+}
+
+@test "text_detect_version outputs correct version from version file" {
+  mkdir -p /tmp/test && cd /tmp/test && echo "1.0.0" > version.txt
+
+  run text_detect_version
+  [ "$status" -eq 0 ]
+  [ "$output" = "1.0.0" ]
+}
 
 # # @test "zig_detect_version outputs correct version from build.zig" {
 # #   echo 'const version = "0.6.0";' > build.zig
