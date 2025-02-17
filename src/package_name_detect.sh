@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-deno_detect_version() {
+deno_detect_name() {
   fail_at_missing_command jq
 
-  for file in jsr.json deno.json package.json; do
+  for file in jsr.json deno.json; do
     if [ -f $file ]; then
-      jq -r '.version // "0.0.1"' "$file"
+      jq -r '.name' "$file"
       return
     fi
   done
@@ -13,33 +13,37 @@ deno_detect_version() {
   if [ -f deno.jsonc ]; then
     fail_at_missing_command deno
 
-    deno eval "const text = await Deno.readTextFile('deno.jsonc'); \
+    deno eval --quiet "const text = await Deno.readTextFile('deno.jsonc'); \
       const json = text.replace(/\/\/.*$/gm, ''); \
       const data = JSON.parse(json); \
-      console.log(data.version ?? '0.0.1');"
+      console.log(data.name);"
+    return
+  fi
+
+  if [ -f "package.json" ]; then
+    jq -r '.name' "package.json"
     return
   fi
 
   do_error "No version information found in jsr.json, deno.json, deno.jsonc, package.json"
 }
 
-go_detect_version() {
+go_detect_name() {
   if [ -f "go.mod" ]; then
-    version=$(sed -nE 's/^module[[:space:]]+([^[:space:]]+)([[:space:]]+v?(.+))?$/\3/p' go.mod)
-    version=${version:-0.0.1}
-    echo "$version"
+    sed -nE 's/^module[[:space:]]+([^[:space:]]+)([[:space:]]+v?(.+))?$/\1/p' go.mod \
+      | awk -F '/' '{ print $NF }'
     return
   fi
 
   do_error "No version information found in version.go or go.mod"
 }
 
-node_detect_version() {
+node_detect_name() {
   fail_at_missing_command jq
 
   for file in jsr.json package.json; do
-    if [ -f $file ]; then
-      jq -r '.version // "0.0.1"' "$file"
+    if [ -f "$file" ]; then
+      jq -r '.name // ""' "$file"
       return
     fi
   done
@@ -47,24 +51,21 @@ node_detect_version() {
   do_error "No version information found in jsr.json, package.json"
 }
 
-#
-# @see https://python-poetry.org/docs/basic-usage/
-# @see https://flit.pypa.io/en/stable/
-# @see https://setuptools.pypa.io/en/latest/userguide/quickstart.html
-python_detect_version() {
-  python_detect_version_pyproject_toml && return
-  python_detect_version_setup_cfg && return
-  python_detect_version_setup_py && return
+python_detect_name() {
+  python_detect_name_pyproject_toml && return
+  python_detect_name_setup_cfg && return
+  python_detect_name_setup_py && return
 
-  do_error "No version information found in __init__.py, setup.py, or pyproject.toml"
+  do_error "No package name information found in pyproject.toml, setup.cfg, or setup.py"
 }
 
-python_detect_version_pyproject_toml() {
+# Attempt to detect package name from pyproject.toml.
+python_detect_name_pyproject_toml() {
   if [ -f "pyproject.toml" ]; then
     PY_VENV=${PY_VENV:-.venv}
     py=$(which_python)
-    [ -d "$PY_VENV" ] || $py -m venv $PY_VENV
-    source $PY_VENV/bin/activate
+    [ -d "$PY_VENV" ] || $py -m venv "$PY_VENV"
+    source "$PY_VENV/bin/activate"
     python -m pip -q install toml -q
 
     python <<'EOF'
@@ -72,23 +73,26 @@ import sys
 import toml
 
 with open("pyproject.toml") as f:
-  data = toml.loads(f.read())
-  version = (data.get("project", {}).get("version")
-             or data.get("tool", {}).get("poetry", {}).get("version")
-             or "0.0.1")
-  print(version)
+    data = toml.loads(f.read())
+    # Try both possible structures:
+    name = (data.get("project", {}).get("name")
+            or data.get("tool", {}).get("poetry", {}).get("name")
+            or data.get("tool.poetry", {}).get("name")
+            or "")
+print(name)
 EOF
     return 0
   fi
   return 1
 }
 
-python_detect_version_setup_cfg() {
+# Attempt to detect package name from setup.cfg.
+python_detect_name_setup_cfg() {
   if [ -f "setup.cfg" ]; then
     PY_VENV=${PY_VENV:-.venv}
     py=$(which_python)
-    [ -d "$PY_VENV" ] || $py -m venv $PY_VENV
-    source $PY_VENV/bin/activate
+    [ -d "$PY_VENV" ] || $py -m venv "$PY_VENV"
+    source "$PY_VENV/bin/activate"
     python -m pip -q install configparser -q
 
     python <<'EOF'
@@ -96,25 +100,28 @@ import configparser
 
 config = configparser.ConfigParser()
 config.read("setup.cfg")
-version = config.get("metadata", "version", fallback="0.0.1")
-print(version)
+name = config.get("metadata", "name", fallback="")
+print(name)
 EOF
     return 0
   fi
   return 1
 }
 
-python_detect_version_setup_py() {
+# Attempt to detect package name from setup.py.
+python_detect_name_setup_py() {
   if [ -f "setup.py" ]; then
-    version=$(cat setup.py | egrep "version\s*=\s*[\"']" | awk '{$1=$1; print}' | sed -E "s/version\s*=\s*[\"']([^\"']+)[\"'].*/\1/")
-    version=${version:-0.0.1}
-    echo "$version"
+    name=$(grep -E "name\s*=\s*[\"']" setup.py | awk '{$1=$1; print}' | sed -E "s/.*name\s*=\s*[\"']([^\"']+)[\"'].*/\1/")
+    if [ -z "$name" ]; then
+      name=$(text_detect_name)
+    fi
+    echo "$name"
     return 0
   fi
   return 1
 }
 
-rust_detect_version() {
+rust_detect_name() {
   # Ensure Cargo.toml exists
   if [ ! -f "Cargo.toml" ]; then
     do_error "Cargo.toml not found"
@@ -124,30 +131,14 @@ rust_detect_version() {
     do_error "'yq' application is missing"
   fi
 
-  yq e '.package.version' Cargo.toml
+  yq e '.package.name' Cargo.toml
 }
 
-text_detect_version() {
-  # List of candidate version file names
-  local version_files=("version" "VERSION" "version.txt" "VERSION.txt")
-  local file version
-
-  # Loop over each candidate file
-  for file in "${version_files[@]}"; do
-    if [ -f "$file" ]; then
-      # Read the first non-empty line from the file and trim whitespace
-      version=$(grep -m 1 . "$file" | tr -d ' \t\n\r')
-      if [ -n "$version" ]; then
-        echo "$version"
-        return 0
-      fi
-    fi
-  done
-
-  do_error "No version information found in any version file (version, VERSION, version.txt, or VERSION.txt)"
+text_detect_name() {
+  basename "$(pwd)"
 }
 
-# # zig_detect_version() {
+# # zig_detect_name() {
 # #   if [ -f "build.zig" ]; then
 # #     version=$(grep -E 'const\s+version\s*=\s*".+"' build.zig | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
 # #     if [ -n "$version" ]; then
@@ -167,7 +158,7 @@ text_detect_version() {
 # #   do_error "No version information found in build.zig or version.zig"
 # # }
 
-# # c_detect_version() {
+# # c_detect_name() {
 # #   if [ -f "version.h" ]; then
 # #     version=$(grep -E '#define\s+VERSION\s+"[^"]+"' version.h | head -n 1 | sed -E 's/#define\s+VERSION\s+"([^"]+)".*/\1/')
 # #     if [ -n "$version" ]; then

@@ -6,12 +6,12 @@ setup() {
 
   source "./src/logging.sh"
   source "./src/utils.sh"
-  source "./src/version_detect.sh"
-  source "./src/version_update.sh"
+  source "./src/package_version_detect.sh"
+  source "./src/package_version_update.sh"
 }
 
 teardown() {
-  for folder in cargo deno go node python rust; do
+  for folder in cargo deno go node python rust text; do
     rm -rf /tmp/$folder
   done
 }
@@ -179,7 +179,7 @@ EOF
 }
 
 @test "text_update_version updates version file" {
-  mkdir -p /tmp/test && cd /tmp/test && echo "1.0.0" > version.txt
+  mkdir -p /tmp/text && cd /tmp/text && echo "1.0.0" > version.txt
 
   run text_update_version "2.0.0"
   run text_detect_version
