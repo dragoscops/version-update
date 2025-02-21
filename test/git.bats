@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 
 setup() {
-load 'test_helper/bats-support/load'
+  load 'test_helper/bats-support/load'
   load 'test_helper/bats-assert/load'
 
   source "./src/package_name_detect.sh"
   source "./src/package_version_detect.sh"
   source "./src/package_version_update.sh"
   source "./src/git.sh"
-  source "./src/project.sh"
 
   source "./test/helpers.sh"
 }

@@ -9,11 +9,13 @@ setup() {
   source "./src/package_version_update.sh"
   source "./src/git.sh"
   source "./src/project.sh"
+  source "./src/utils.sh"
+  source "./src/logging.sh"
 
   source "./test/helpers.sh"
 }
 
-@test "git_get_commit_message returns the last commit message" {
+@test "gather_packages_info returns the root project details" {
   init_text_project /tmp/git_text_project
   cd /tmp/git_text_project
 
@@ -22,66 +24,46 @@ setup() {
   git commit -am "chore: text project init"
   git tag v$(text_detect_version)
 
-  # The last commit is a merge commit.
-  run git_get_commit_message
+  init_deno_project /tmp/git_text_project/packages/deno
+  init_go_project /tmp/git_text_project/packages/go
+  init_node_project /tmp/git_text_project/packages/node
 
-  # Verify that the output matches the expected commit message
+  cd /tmp/git_text_project
+  text_update_version "1.1.0"
+  git tag v$(text_detect_version)
+
+  # Run git_get_last_tag
+  run gather_packages_info
+
+  # Verify that the output matches the latest tag
   assert_success
-  assert_output "chore: text project init"
+  assert_output ".:text:git_text_project:1.1.0"
 }
 
-# @test "git_get_commit_message returns the last commit message, after initializing project" {
-#   init_text_project /tmp/git_text_project
-#   cd /tmp/git_text_project
+@test "gather_packages_info returns the packages details" {
+  init_text_project /tmp/git_text_project
+  cd /tmp/git_text_project
 
-#   git init
-#   git add .
-#   git commit -am "chore: text project init"
-#   git tag v$(text_detect_version)
+  git init
+  git add .
+  git commit -am "chore: text project init"
+  git tag v$(text_detect_version)
 
-#   init_deno_project /tmp/git_text_project/packages/deno
-#   init_go_project /tmp/git_text_project/packages/go
-#   init_node_project /tmp/git_text_project/packages/node
+  init_deno_project /tmp/git_text_project/packages/deno
+  init_go_project /tmp/git_text_project/packages/go
+  init_node_project /tmp/git_text_project/packages/node
 
-#   cd /tmp/git_text_project
-#   text_update_version "1.1.0"
+  cd /tmp/git_text_project
+  text_update_version "1.1.0"
+  git tag v$(text_detect_version)
 
-#   git add .
-#   git commit -am "chore: packages init"
-#   git tag v$(text_detect_version)
+  # Run git_get_last_tag
+  run gather_packages_info ".:text,packages/deno:deno,packages/go:go,packages/node:node"
 
-#   # The last commit is a merge commit.
-#   run git_get_commit_message
-
-#   # Verify that the output matches the expected commit message
-#   assert_success
-#   assert_output "chore: packages init"
-# }
-
-# @test "git_get_commit_message returns the last commit message, after initializing packages" {
-#   init_text_project /tmp/git_text_project
-#   cd /tmp/git_text_project
-
-#   git init
-#   git add .
-#   git commit -am "chore: text project init"
-#   git tag v$(text_detect_version)
-
-#   init_deno_project /tmp/git_text_project/packages/deno
-#   init_go_project /tmp/git_text_project/packages/go
-#   init_node_project /tmp/git_text_project/packages/node
-
-#   cd /tmp/git_text_project
-#   text_update_version "1.1.0"
-
-#   git add .
-#   git commit -am "chore: packages init"
-#   git tag v$(text_detect_version)
-
-#   # The last commit is a merge commit.
-#   run git_get_commit_message
-
-#   # Verify that the output matches the expected commit message
-#   assert_success
-#   assert_output "chore: packages init"
-# }
+  # Verify that the output matches the latest tag
+  assert_success
+  assert_output ".:text:git_text_project:1.1.0
+packages/deno:deno:deno:1.0.0
+packages/go:go:go:0.0.1
+packages/node:node:node:1.0.0"
+}
