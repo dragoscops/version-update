@@ -6,11 +6,8 @@ inputs:
     description: Github Token for git commit or gh pr create
     required: true
   workspaces:
-    default: "."
+    default: ".:text"
     description: Paths to the workspaces (separated by comma)
-  version_files:
-    default: package.json
-    description: Version files to look for in each workspace (separated by comma)
   version_message:
     default: version pull request
     description: Version pull request message
@@ -30,7 +27,7 @@ outputs:
     description: Tag to have been pushed
     value: "${{ steps.tag_info.outputs.tag }}"
   # status:
-  #   description: Status of the version increase
+  #   dexscription: Status of the version increase
   #   value: "${{ steps. }}"
 
 runs:
@@ -41,25 +38,9 @@ runs:
       if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
-        commit_message=$(git log -1 --no-merges --pretty=format:%B)
-        echo "commit_message=${commit_message}"
-        echo "commit_message<<EOF" >> $GITHUB_OUTPUT
-        echo "${commit_message}" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-
-        pr_message=$(git log -1 --pretty=format:%B)
-        echo "pr_message=${pr_message}"
-        echo "pr_message<<EOF" >> $GITHUB_OUTPUT
-        echo "${pr_message}" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-
-        last_tag=$(git for-each-ref --sort=-taggerdate --format '%(refname:short)' refs/tags | head -n 1)
-        if [[ -z "$last_tag" ]]; then
-          # last_tag=$(echo "HEAD~$(git rev-list --count HEAD)")
-          last_tag=$(git rev-list --max-parents=0 HEAD)
-        fi
-        echo "last_tag=${last_tag}"
-        echo "last_tag=${last_tag}" >> $GITHUB_OUTPUT
+        git_get_commit_message --store
+        # git_get_pr_message --store
+        get_get_last_tag --store
 
     - name: Determine Changed Packages
       id: workspaces_info
