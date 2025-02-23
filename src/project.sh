@@ -101,12 +101,15 @@ increase_version() {
 
   local new_version="${major}.${minor}.${patch}"
 
-  # If a pre-release label is provided, append it:
+  # Append pre-release label if provided:
   if [ -n "$pre_release_label" ]; then
     if [[ "$current_version" =~ -${pre_release_label}\.([0-9]+)$ ]]; then
       local num="${BASH_REMATCH[1]}"
       num=$((num + 1))
       new_version="${new_version}-${pre_release_label}.${num}"
+    elif [[ "$current_version" =~ -${pre_release_label}$ ]]; then
+      # If no numeric counter exists, treat it as .0 and bump to .1.
+      new_version="${new_version}-${pre_release_label}.1"
     else
       new_version="${new_version}-${pre_release_label}"
     fi
