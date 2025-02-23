@@ -34,7 +34,7 @@ go_update_version() {
   local new_version="$1"
   local updated=0
   if [ -f "go.mod" ]; then
-    sed -i '' -E 's/^(module[[:space:]]+[^[:space:]]+)([[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+)?/\1 v'"${new_version}"'/' go.mod && updated=1
+    $SED_I_CMD -E 's/^(module[[:space:]]+[^[:space:]]+)([[:space:]]+v?[0-9]+\.[0-9]+\.[0-9]+)?/\1 v'"${new_version}"'/' go.mod && updated=1
   fi
   [ $updated -eq 1 ] || do_error "No version information updated in go.mod"
 }
@@ -148,7 +148,7 @@ python_update_version_setup_py() {
   local new_version="$1"
 
   if [ -f setup.py ]; then
-    sed -i '' -E "s/(\s*version\s*=\s*[\"'])[^\"']+([\"'].*)/\1${new_version}\2/" setup.py
+    $SED_I_CMD -E "s/(\s*version\s*=\s*[\"'])[^\"']+([\"'].*)/\1${new_version}\2/" setup.py
   fi
 }
 

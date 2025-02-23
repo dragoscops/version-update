@@ -43,5 +43,4 @@ tasks:
     summary: |
       Executes the test suite using bats.
     cmds:
-      # - find ./test -iname "*.bats" -maxdepth 1 | while read f; do ./test/bats/bin/bats -x $f || exit 1; done
       - ./test/bats/bin/bats -x ./test/

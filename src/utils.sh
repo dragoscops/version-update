@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+export SED_I_CMD="sed -i"
+uname -a | grep Darwin > /dev/null && export SED_I_CMD="sed -i ''"
+
 fail_at_missing_command() {
   local command="$1"
 
