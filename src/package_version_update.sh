@@ -172,7 +172,8 @@ rust_update_version() {
 text_update_version() {
   local new_version="$1"
   local version_files=("version" "VERSION" "version.txt" "VERSION.txt")
-  local file found=0
+  local file
+  local found=0
 
   for file in "${version_files[@]}"; do
     if [ -f "$file" ]; then

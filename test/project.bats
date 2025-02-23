@@ -11,6 +11,7 @@ setup() {
   source "./src/project.sh"
   source "./src/utils.sh"
   source "./src/logging.sh"
+  source "./src/version.sh"
 
   source "./test/helpers.sh"
 }
@@ -92,58 +93,39 @@ setup() {
   assert_output ".:text:git_text_project:1.1.0,packages/deno:deno:deno:1.0.0,packages/node:node:node:1.0.0"
 }
 
-@test "bump minor version for feat commit without pre-release" {
-  run increase_version "1.2.3" "feat(parser): add new parsing logic"
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.3.0" ]
+@test "increase_workspaces_versions returns the packages details" {
+  cd /tmp/git_text_project
+  echo "fix: $(date +%s)" > date.txt
+  git add . && git commit -am "fix: changing main project"
+
+  commit_message=$(git_get_commit_message)
+  last_tag=$(git_get_last_created_tag)
+  changed_workspaces_info=$(gather_changed_workspaces_info \
+    ".:text,packages/deno:deno,packages/go:go,packages/node:node" \
+    "$last_tag")
+
+  run increase_workspaces_versions "$changed_workspaces_info" "$commit_message"
+
+  # Verify that the output matches the latest tag
+  assert_success
+  assert_output ".:text:git_text_project:1.1.1,packages/deno:deno:deno:1.0.1,packages/node:node:node:1.0.1"
 }
 
-@test "bump patch version for fix commit without pre-release" {
-  run increase_version "1.2.3" "fix: correct error"
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.2.4" ]
-}
+@test "update_workspaces_versions returns the packages details" {
+  cd /tmp/git_text_project
 
-@test "bump major version for commit with exclamation mark" {
-  run increase_version "1.2.3" "feat!: completely change API"
-  [ "$status" -eq 0 ]
-  [ "$output" = "2.0.0" ]
-}
+  workspaces_info=".:text:git_text_project:1.1.1,packages/deno:deno:deno:1.0.1,packages/node:node:node:1.0.1"
+  update_workspaces_versions "$workspaces_info"
 
-@test "bump major version for commit with BREAKING CHANGE" {
-  # Use a literal newline in the commit message.
-  commit_msg=$'refactor: update internals\n\nBREAKING CHANGE: changes API'
-  run increase_version "1.2.3" "$commit_msg"
-  [ "$status" -eq 0 ]
-  [ "$output" = "2.0.0" ]
-}
+  run cat version.txt
+  assert_success
+  assert_output "1.1.1"
 
-@test "append pre-release label when not present" {
-  run increase_version "1.2.3" "feat: add new feature" "alpha"
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.3.0-alpha" ]
-}
+  run echo $(cat /tmp/git_text_project/packages/deno/deno.json | jq -r '.version')
+  assert_success
+  assert_output "1.0.1"
 
-@test "increment pre-release counter if already present" {
-  run increase_version "1.2.3-alpha.0" "fix: bug fix" "alpha"
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.2.4-alpha.1" ]
-}
-
-@test "increment pre-release counter if already present no count" {
-  run increase_version "1.2.3-alpha" "fix: bug fix" "alpha"
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.2.4-alpha.1" ]
-}
-
-@test "increment pre-release counter if already present no count (2nd time)" {
-  run increase_version "1.2.3-alpha.1" "fix: bug fix" "alpha"
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.2.4-alpha.2" ]
-}
-
-@test "bump patch version for fix commit with different pre-release label" {
-  run increase_version "1.2.3" "fix: minor fix" "beta"
-  [ "$status" -eq 0 ]
-  [ "$output" = "1.2.4-beta" ]
+  run echo $(cat /tmp/git_text_project/packages/node/package.json | jq -r '.version')
+  assert_success
+  assert_output "1.0.1"
 }

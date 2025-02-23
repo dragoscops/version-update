@@ -11,7 +11,7 @@ gather_workspaces_info() {
     IFS=':' read -r workspace_path workspace_type <<< "$workspace"
 
     if [ -z "$main_workspace_path" ]; then
-      main_workspace_path=$(pwd)
+      main_workspace_path=$(realpath "$workspace_path")
     else
       cd "$main_workspace_path/$workspace_path"
     fi
@@ -22,6 +22,8 @@ gather_workspaces_info() {
     workspaces_info="$workspaces_info,$workspace_path:$workspace_type:$workspace_name:$workspace_version"
   done
   workspaces_info=${workspaces_info:1}
+
+  cd "$main_workspace_path"
 
   if [ "$2" == "--store" ]; then
     echo "workspaces_info<<EOF" >> "$GITHUB_OUTPUT"
@@ -58,62 +60,54 @@ gather_changed_workspaces_info() {
   fi
 }
 
-increase_version() {
-  local current_version="$1"
+increase_workspaces_versions() {
+  local workspaces_info="$1"
   local commit_message="$2"
-  local pre_release_label="$3"  # Optional pre-release label, e.g., "alpha"
-  local bump="patch"            # Default bump type
+  local updated_workspaces_info=""
 
-  # Determine bump type from commit message:
-  if echo "$commit_message" | grep -qi "BREAKING CHANGE"; then
-    bump="major"
+  if [ -z "$changed_workspaces_info" ]; then
+    do_error "No workspaces changed ..."
+  fi
+
+  if [ -z "$commit_message" ]; then
+    do_error "No commit message ..."
+  fi
+
+  IFS=',' read -r -a workspaces_info_array <<< "$workspaces_info"
+  for workspace_info in "${workspaces_info_array[@]}"; do
+    IFS=':' read -r workspace_path workspace_type workspace_name workspace_version <<< "$workspace_info"
+    changed=$(git diff --name-only "$last_tag" HEAD -- "$workspace_path")
+    if [ -n "$changed" ]; then
+      workspace_updated_version=$(increase_version "$workspace_version" "$commit_message")
+      updated_workspaces_info="$updated_workspaces_info,$workspace_path:$workspace_type:$workspace_name:$workspace_updated_version"
+    fi
+  done
+  updated_workspaces_info=${updated_workspaces_info:1}
+
+  if [ "$3" == "--store" ]; then
+    echo "updated_workspaces_info<<EOF" >> "$GITHUB_OUTPUT"
+    echo "$updated_workspaces_info" >> "$GITHUB_OUTPUT"
+    echo "EOF" >> "$GITHUB_OUTPUT"
   else
-    local type
-    type=$(echo "$commit_message" | awk '{print $1}' | sed -E 's/(\(.*\))?://g')
-    if [[ "$type" == *"!" ]]; then
-      bump="major"
-      type="${type%!}"
-    elif [ "$type" = "feat" ]; then
-      bump="minor"
-    elif [ "$type" = "fix" ]; then
-      bump="patch"
-    fi
+    echo "$updated_workspaces_info"
   fi
+}
 
-  # Remove any existing pre-release suffix:
-  local base_version="${current_version%%-*}"
-  IFS='.' read -r major minor patch <<< "$base_version"
+update_workspaces_versions() {
+  local workspaces_info="$1"
+  local main_workspace_path
 
-  case "$bump" in
-    major)
-      major=$((major + 1))
-      minor=0
-      patch=0
-      ;;
-    minor)
-      minor=$((minor + 1))
-      patch=0
-      ;;
-    patch)
-      patch=$((patch + 1))
-      ;;
-  esac
-
-  local new_version="${major}.${minor}.${patch}"
-
-  # Append pre-release label if provided:
-  if [ -n "$pre_release_label" ]; then
-    if [[ "$current_version" =~ -${pre_release_label}\.([0-9]+)$ ]]; then
-      local num="${BASH_REMATCH[1]}"
-      num=$((num + 1))
-      new_version="${new_version}-${pre_release_label}.${num}"
-    elif [[ "$current_version" =~ -${pre_release_label}$ ]]; then
-      # If no numeric counter exists, treat it as .0 and bump to .1.
-      new_version="${new_version}-${pre_release_label}.1"
+  IFS=',' read -r -a workspaces_info_array <<< "$workspaces_info"
+  for workspace_info in "${workspaces_info_array[@]}"; do
+    IFS=':' read -r workspace_path workspace_type workspace_name workspace_version <<< "$workspace_info"
+    if [ -z "${main_workspace_path}" ]; then
+      main_workspace_path=$(realpath "${workspace_path}")
     else
-      new_version="${new_version}-${pre_release_label}"
+      cd "$main_workspace_path/$workspace_path"
     fi
-  fi
 
-  echo "$new_version"
+    ${workspace_type}_update_version "$workspace_version"
+  done
+
+  cd "$main_workspace_path"
 }
