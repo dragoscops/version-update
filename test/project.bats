@@ -33,14 +33,14 @@ setup() {
   git tag v$(text_detect_version)
 
   # Run git_get_last_tag
-  run gather_packages_info
+  run gather_workspaces_info
 
   # Verify that the output matches the latest tag
   assert_success
   assert_output ".:text:git_text_project:1.1.0"
 }
 
-@test "gather_packages_info returns the packages details" {
+@test "gather_workspaces_info returns the packages details" {
   init_text_project /tmp/git_text_project
   cd /tmp/git_text_project
 
@@ -55,15 +55,39 @@ setup() {
 
   cd /tmp/git_text_project
   text_update_version "1.1.0"
+  git add .
+  git commit -am "chore: text project init"
   git tag v$(text_detect_version)
 
   # Run git_get_last_tag
-  run gather_packages_info ".:text,packages/deno:deno,packages/go:go,packages/node:node"
+  run gather_workspaces_info ".:text,packages/deno:deno,packages/go:go,packages/node:node"
 
   # Verify that the output matches the latest tag
   assert_success
-  assert_output ".:text:git_text_project:1.1.0
-packages/deno:deno:deno:1.0.0
-packages/go:go:go:0.0.1
-packages/node:node:node:1.0.0"
+  assert_output ".:text:git_text_project:1.1.0,packages/deno:deno:deno:1.0.0,packages/go:go:go:0.0.1,packages/node:node:node:1.0.0"
+}
+
+@test "gather_changed_workspaces_info returns the packages details" {
+  cd /tmp/git_text_project
+  echo "$(date +%s)" > date.txt
+  git add . && git commit -am "chore: changing main project"
+
+  cd /tmp/git_text_project/packages/deno
+  echo "$(date +%s)" > date.txt
+  git add . && git commit -am "chore: changing deno project"
+
+  cd /tmp/git_text_project/packages/node
+  echo "$(date +%s)" > date.txt
+  git add . && git commit -am "chore: changing node project"
+
+  cd /tmp/git_text_project
+
+  # Run git_get_last_tag
+  run gather_changed_workspaces_info \
+    ".:text,packages/deno:deno,packages/go:go,packages/node:node" \
+    "$(git_get_last_created_tag)"
+
+  # Verify that the output matches the latest tag
+  assert_success
+  assert_output ".:text:git_text_project:1.1.0,packages/deno:deno:deno:1.0.0,packages/node:node:node:1.0.0"
 }
