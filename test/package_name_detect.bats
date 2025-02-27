@@ -1,18 +1,22 @@
 #!/usr/bin/env bash
 
-setup() {
-  load 'test_helper/bats-support/load'
-  load 'test_helper/bats-assert/load'
+load 'test_helper/bats-support/load'
+load 'test_helper/bats-assert/load'
 
-  source "./src/logging.sh"
-  source "./src/utils.sh"
-  source "./src/package_name_detect.sh"
+source "./src/logging.sh"
+source "./src/utils.sh"
+source "./src/package_name_detect.sh"
 
-  source "./test/helpers.sh"
-}
+source "./test/helpers.sh"
 
 teardown() {
-  do_cleanup
+  rm -rf /tmp/cargo \
+    /tmp/deno \
+    /tmp/go \
+    /tmp/node \
+    /tmp/python \
+    /tmp/rust \
+    /tmp/text
 }
 
 @test "deno_detect_name outputs correct version from jsr.json" {
