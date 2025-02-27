@@ -1,7 +1,10 @@
 name: Test Version Update Action
 
 on:
-  push: {}
+  push:
+    branches:
+      - main
+      - rewrite
 
 jobs:
   prereqs:

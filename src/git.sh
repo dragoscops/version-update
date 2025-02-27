@@ -1,4 +1,13 @@
 
+git_setup_user() {
+  # if [ "$1" == "--gitea" ]; then echo; fi
+  git config user.name "GitHub Actions"
+  git config user.email "actions@github.com"
+  if [ ! -z "$GITHUB_WORKSPACE" ]; then
+    git config --global --add safe.directory "$GITHUB_WORKSPACE"
+  fi
+}
+
 
 git_get_commit_message() {
   commit_message=$(git log -1 --no-merges --pretty=format:%B)

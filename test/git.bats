@@ -4,7 +4,6 @@ setup() {
   load 'test_helper/bats-support/load'
   load 'test_helper/bats-assert/load'
 
-  source "./src/package_name_detect.sh"
   source "./src/package_version_detect.sh"
   source "./src/package_version_update.sh"
   source "./src/git.sh"
@@ -12,11 +11,26 @@ setup() {
   source "./test/helpers.sh"
 }
 
-@test "git_get_commit_message returns the last commit message, after initializing project" {
+@test "git_setup_user configures git for Github" {
+  rm -rf /tmp/git_text_project
   init_text_project /tmp/git_text_project
   cd /tmp/git_text_project
-
   git init
+
+  git_setup_user
+
+  run git config user.name
+  assert_success
+  assert_output "GitHub Actions"
+
+  run git config user.email
+  assert_success
+  assert_output "actions@github.com"
+}
+
+@test "git_get_commit_message returns the last commit message, after initializing project" {
+  cd /tmp/git_text_project
+
   git add .
   git commit -am "chore: text project init"
 

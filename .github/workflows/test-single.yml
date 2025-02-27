@@ -1,56 +1,56 @@
 name: Test Version Update Action (Single)
 
 on:
-  workflow_call:
-    inputs:
-      title:
-        description: Test Title
-        required: true
-        type: string
-      workspaces:
-        default: test/node
-        description: Workspaces
-        type: string
-      version_files:
-        default: package.json
-        description: Version Files (for Workspaces)
-        type: string
-      commit_type:
-        default: feat
-        description: Type of Commit (Dictates Type of Version Increment)
-        type: string
-      version_message:
-        default: "new version update"
-        description: Message Included in the Version Commit/PR
-        type: string
-      no_pr:
-        description: No Pull Request
-        type: string
-  workflow_dispatch:
-    inputs:
-      title:
-        description: Test Title
-        required: true
-        type: string
-      workspaces:
-        default: test/node
-        description: Workspaces
-        type: string
-      version_files:
-        default: package.json
-        description: Version Files (for Workspaces)
-        type: string
-      commit_type:
-        default: feat
-        description: Type of Commit (Dictates Type of Version Increment)
-        type: string
-      version_message:
-        default: "new version update"
-        description: Message Included in the Version Commit/PR
-        type: string
-      no_pr:
-        description: No Pull Request
-        type: string
+  workflow_call: {}
+  #   inputs:
+  #     title:
+  #       description: Test Title
+  #       required: true
+  #       type: string
+  #     workspaces:
+  #       default: test/node
+  #       description: Workspaces
+  #       type: string
+  #     version_files:
+  #       default: package.json
+  #       description: Version Files (for Workspaces)
+  #       type: string
+  #     commit_type:
+  #       default: feat
+  #       description: Type of Commit (Dictates Type of Version Increment)
+  #       type: string
+  #     version_message:
+  #       default: "new version update"
+  #       description: Message Included in the Version Commit/PR
+  #       type: string
+  #     no_pr:
+  #       description: No Pull Request
+  #       type: string
+  # workflow_dispatch:
+  #   inputs:
+  #     title:
+  #       description: Test Title
+  #       required: true
+  #       type: string
+  #     workspaces:
+  #       default: test/node
+  #       description: Workspaces
+  #       type: string
+  #     version_files:
+  #       default: package.json
+  #       description: Version Files (for Workspaces)
+  #       type: string
+  #     commit_type:
+  #       default: feat
+  #       description: Type of Commit (Dictates Type of Version Increment)
+  #       type: string
+  #     version_message:
+  #       default: "new version update"
+  #       description: Message Included in the Version Commit/PR
+  #       type: string
+  #     no_pr:
+  #       description: No Pull Request
+  #       type: string
 
 jobs:
   test-version-update:
@@ -65,12 +65,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
-
-      - name: Set up Git
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Commit Info
         id: git_info
