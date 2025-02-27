@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 do_cleanup() {
   for folder in cargo deno go node python rust text; do
     rm -rf /tmp/$folder
