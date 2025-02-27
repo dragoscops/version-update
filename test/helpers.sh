@@ -141,7 +141,7 @@ init_rust_project() {
     && cd "$folder" \
     && cargo init \
     && cargo set-version "$version" \
-    && rm Cargo.lock
+    && rm -rf Cargo.lock
 }
 
 init_text_project() {
