@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-setup() {
-  load 'test_helper/bats-support/load'
-  load 'test_helper/bats-assert/load'
+load 'test_helper/bats-support/load'
+load 'test_helper/bats-assert/load'
 
-  source "./src/logging.sh"
-}
+source "./src/logging.sh"
 
 @test "do_debug test will output '::debug:test'" {
   run do_debug "test"

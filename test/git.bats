@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
-setup() {
-  load 'test_helper/bats-support/load'
-  load 'test_helper/bats-assert/load'
+load 'test_helper/bats-support/load'
+load 'test_helper/bats-assert/load'
 
-  source "./src/package_version_detect.sh"
-  source "./src/package_version_update.sh"
-  source "./src/git.sh"
+source "./src/package_version_detect.sh"
+source "./src/package_version_update.sh"
+source "./src/git.sh"
 
-  source "./test/helpers.sh"
-}
+source "./test/helpers.sh"
 
 @test "git_setup_user configures git for Github" {
   rm -rf /tmp/git_text_project
