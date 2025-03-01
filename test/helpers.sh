@@ -68,7 +68,7 @@ init_node_project() {
 }
 
 init_python_project() {
-  local folder="${1:-/tmp/cargo}"
+  local folder="${1:-/tmp/rust}"
   local version_file="${2:-package.json}"
   local version="${3:-1.0.0}"
 
@@ -132,8 +132,8 @@ EOF
 }
 
 init_rust_project() {
-  local folder="${1:-/tmp/cargo}"
-  local version_file="${2:-package.json}"
+  local folder="${1:-/tmp/rust}"
+  local version_file="${2:-Cargo.toml}"
   local version="${3:-1.0.0}"
 
   rm -rf "$folder" \

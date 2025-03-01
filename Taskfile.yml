@@ -1,6 +1,32 @@
 version: "3"
 
 tasks:
+  docker:attach:
+    cmds:
+      - docker run --rm -it -v "$(pwd):/app" --entrypoint bash dragoscops/version-update:latest
+    desc: Use a Linux Container to Debug
+    deps:
+      - docker:build
+
+  docker:build:
+    cmds:
+      - docker build . -t dragoscops/version-update:latest
+    # internal: true
+    sources:
+      - Dockerfile
+
+  docker:test:
+    cmds:
+      - docker run --rm -v "$(pwd):/app" --entrypoint bash dragoscops/version-update:latest -c "task test"
+    deps:
+      - docker:build
+    desc: Run Unit Tests under Linux
+    sources:
+      - src/**/*
+      - test/**/*
+    summary: |
+      Executes the Test Suite (under a Linux Docker Container) Using https://github.com/bats-core/bats-core.
+
   test:bats:install:
     cmds:
       - mkdir -p test
@@ -41,8 +67,8 @@ tasks:
       - test:bats:update
     desc: Run Unit Tests
     sources:
-      - test/**/*.bats
-      - test/**/*.sh
+      - src/**/*
+      - test/**/*
     summary: |
       Executes the test suite using bats.
     cmds:

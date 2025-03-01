@@ -9,15 +9,16 @@ source "./src/package_name_detect.sh"
 
 source "./test/helpers.sh"
 
-teardown() {
-  rm -rf /tmp/cargo \
-    /tmp/deno \
-    /tmp/go \
-    /tmp/node \
-    /tmp/python \
-    /tmp/rust \
-    /tmp/text
-}
+# teardown() {
+#   rm -rf \
+#     /tmp/deno \
+#     /tmp/go \
+#     /tmp/node \
+#     /tmp/python \
+#     /tmp/rust \
+#     /tmp/zig \
+#     /tmp/text
+# }
 
 @test "deno_detect_name outputs correct version from jsr.json" {
   init_deno_project /tmp/deno jsr.json
@@ -122,9 +123,10 @@ teardown() {
 @test "rust_detect_name outputs correct version from Cargo.toml" {
   init_rust_project
 
+  rust_detect_name
   run rust_detect_name
   [ "$status" -eq 0 ]
-  [ "$output" = "cargo" ]
+  [ "$output" = "rust" ]
 }
 
 @test "text_detect_name outputs correct version from version file" {
