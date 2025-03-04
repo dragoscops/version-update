@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-setup() {
-  load 'test_helper/bats-support/load'
-  load 'test_helper/bats-assert/load'
+load 'test_helper/bats-support/load'
+load 'test_helper/bats-assert/load'
 
-  source "./src/version.sh"
-}
+source "./src/version.sh"
 
 @test "bump minor version for feat commit without pre-release" {
   run increase_version "1.2.3" "feat(parser): add new parsing logic"

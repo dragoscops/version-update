@@ -1,26 +1,25 @@
 #!/usr/bin/env bash
 
-setup() {
-  load 'test_helper/bats-support/load'
-  load 'test_helper/bats-assert/load'
+load 'test_helper/bats-support/load'
+load 'test_helper/bats-assert/load'
 
-  source "./src/package_name_detect.sh"
-  source "./src/package_version_detect.sh"
-  source "./src/package_version_update.sh"
-  source "./src/git.sh"
-  source "./src/project.sh"
-  source "./src/utils.sh"
-  source "./src/logging.sh"
-  source "./src/version.sh"
+source "./src/package_name_detect.sh"
+source "./src/package_version_detect.sh"
+source "./src/package_version_update.sh"
+source "./src/git.sh"
+source "./src/project.sh"
+source "./src/utils.sh"
+source "./src/logging.sh"
+source "./src/version.sh"
 
-  source "./test/helpers.sh"
-}
+source "./test/helpers.sh"
 
 @test "gather_packages_info returns the root project details" {
   init_text_project /tmp/git_text_project
   cd /tmp/git_text_project
 
   git init
+  git_setup_user
   git add .
   git commit -am "chore: text project init"
   git tag v$(text_detect_version)
@@ -46,6 +45,7 @@ setup() {
   cd /tmp/git_text_project
 
   git init
+  git_setup_user
   git add .
   git commit -am "chore: text project init"
   git tag v$(text_detect_version)

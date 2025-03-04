@@ -9,16 +9,16 @@ source "./src/package_name_detect.sh"
 
 source "./test/helpers.sh"
 
-# teardown() {
-#   rm -rf \
-#     /tmp/deno \
-#     /tmp/go \
-#     /tmp/node \
-#     /tmp/python \
-#     /tmp/rust \
-#     /tmp/zig \
-#     /tmp/text
-# }
+teardown() {
+  rm -rf \
+    /tmp/deno \
+    /tmp/go \
+    /tmp/node \
+    /tmp/python \
+    /tmp/rust \
+    /tmp/zig \
+    /tmp/text
+}
 
 @test "deno_detect_name outputs correct version from jsr.json" {
   init_deno_project /tmp/deno jsr.json

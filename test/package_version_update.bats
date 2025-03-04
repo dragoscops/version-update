@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
 
-setup() {
-  load 'test_helper/bats-support/load'
-  load 'test_helper/bats-assert/load'
+load 'test_helper/bats-support/load'
+load 'test_helper/bats-assert/load'
 
-  source "./src/logging.sh"
-  source "./src/utils.sh"
-  source "./src/package_version_detect.sh"
-  source "./src/package_version_update.sh"
+source "./src/logging.sh"
+source "./src/utils.sh"
+source "./src/package_version_detect.sh"
+source "./src/package_version_update.sh"
 
-  source "./test/helpers.sh"
-}
+source "./test/helpers.sh"
 
 teardown() {
-  do_cleanup
+  rm -rf \
+    /tmp/deno \
+    /tmp/go \
+    /tmp/node \
+    /tmp/python \
+    /tmp/rust \
+    /tmp/zig \
+    /tmp/text
 }
 
 @test "deno_update_version outputs correct version from jsr.json" {

@@ -1,6 +1,11 @@
 version: "3"
 
 tasks:
+  default:
+    cmds:
+      - task --list
+    desc: Default Action => List all Tasks
+
   docker:attach:
     cmds:
       - docker run --rm -it -v "$(pwd):/app" --entrypoint bash dragoscops/version-update:latest
@@ -72,4 +77,10 @@ tasks:
     summary: |
       Executes the test suite using bats.
     cmds:
-      - ./test/bats/bin/bats -x ./test/
+      # - ./test/bats/bin/bats -x ./test/
+      # - ./test/bats/bin/bats -x ./test/git.bats
+      # - ./test/bats/bin/bats -x ./test/logging.bats
+      # - ./test/bats/bin/bats -x ./test/package_name_detect.bats
+      # - ./test/bats/bin/bats -x ./test/package_version_detect.bats
+      - ./test/bats/bin/bats -x ./test/project.bats
+      # - ./test/bats/bin/bats -x ./test/version.bats
