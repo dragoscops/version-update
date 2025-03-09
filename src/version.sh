@@ -14,7 +14,7 @@ increase_version() {
     do_error "No commit message provided. Please specify --commit."
   fi
   
-  local bump="patch"            # Default bump type
+  local bump="none"            # Default bump type
   
   # Determine bump type from commit message:
   if echo "$commit_message" | grep -qi "BREAKING CHANGE"; then
