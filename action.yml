@@ -38,7 +38,7 @@ runs:
       if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
-        echo ${{ github.workspace }}/src/git.sh
+        cat ${{ github.workspace }}/src/git.sh
 
     #     git_setup_user
 

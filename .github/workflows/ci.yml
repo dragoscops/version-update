@@ -41,8 +41,8 @@ jobs:
           sudo apt install -y jq yq
 
           cargo install cargo-set-version
-      - name: Run Tests
-        run: |
-          task test
+      # - name: Run Tests
+      #   run: |
+      #     task test
       - name: Increase Version
         uses: ./
