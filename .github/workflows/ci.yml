@@ -40,7 +40,7 @@ jobs:
           sudo apt update
           sudo apt install -y jq
 
-          curl -sSL https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_darwin_amd64 -o /usr/local/bin/yq
+          curl -sSL https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_linux_amd64 -o /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
 
           cargo install cargo-set-version
