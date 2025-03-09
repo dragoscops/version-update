@@ -22,7 +22,7 @@ tasks:
 
   docker:test:
     cmds:
-      - docker run --rm -v "$(pwd):/app" --entrypoint bash dragoscops/version-update:latest -c "task test"
+      - docker run --rm -v "$(pwd):/app" --entrypoint bash dragoscops/version-update:latest -c "task test {{ .CLI_ARGS }}"
     deps:
       - docker:build
     desc: Run Unit Tests under Linux
@@ -77,6 +77,7 @@ tasks:
     summary: |
       Executes the test suite using bats.
     cmds:
+      - rm -rf ./tmp && mkdir ./tmp
       - ./test/bats/bin/bats -x ./test/
       # - ./test/bats/bin/bats -x ./test/git.bats
       # - ./test/bats/bin/bats -x ./test/logging.bats

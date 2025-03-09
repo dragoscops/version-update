@@ -2,12 +2,12 @@
 
 do_cleanup() {
   for folder in cargo deno go node python rust text; do
-    rm -rf /tmp/$folder
+    rm -rf ./tmp/$folder
   done
 }
 
 init_deno_project() {
-  local folder="${1:-/tmp/deno}"
+  local folder="${1:-./tmp/deno}"
   local version_file="${2:-deno.json}"
   local version="${3:-1.0.0}"
 
@@ -38,7 +38,7 @@ init_deno_project() {
 }
 
 init_go_project() {
-  local folder="${1:-/tmp/go}"
+  local folder="${1:-./tmp/go}"
   local version_file="${2:-go.mod}"
   local version="${3:-1.0.0}"
 
@@ -49,7 +49,7 @@ init_go_project() {
 }
 
 init_node_project() {
-  local folder="${1:-/tmp/node}"
+  local folder="${1:-./tmp/node}"
   local version_file="${2:-package.json}"
   local version="${3:-1.0.0}"
 
@@ -68,7 +68,7 @@ init_node_project() {
 }
 
 init_python_project() {
-  local folder="${1:-/tmp/rust}"
+  local folder="${1:-./tmp/rust}"
   local version_file="${2:-package.json}"
   local version="${3:-1.0.0}"
 
@@ -132,7 +132,7 @@ EOF
 }
 
 init_rust_project() {
-  local folder="${1:-/tmp/rust}"
+  local folder="${1:-./tmp/rust}"
   local version_file="${2:-Cargo.toml}"
   local version="${3:-1.0.0}"
 
@@ -145,7 +145,7 @@ init_rust_project() {
 }
 
 init_text_project() {
-  local folder="${1:-/tmp/text}"
+  local folder="${1:-./tmp/text}"
   local version_file="${2:-version.txt}"
   local version="${3:-1.0.0}"
 

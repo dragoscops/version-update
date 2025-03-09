@@ -37,6 +37,9 @@ parse_arguments() {
       --*)
         # Handle --option value pairs
         local key="${1:2}" # Remove leading --
+        # Convert hyphens to underscores in key
+        local key="${key//-/_}"
+        
         if [[ "$#" -gt 1 && ! "$2" == --* && ! "$2" == -* ]]; then
           # Add key-value pair to JSON
           local value="$2"
@@ -51,6 +54,9 @@ parse_arguments() {
       -*)
         # Handle short options (-h, -v)
         local key="${1:1}" # Remove leading -
+        # Convert hyphens to underscores in key
+        local key="${key//-/_}"
+        
         if [[ "$#" -gt 1 && ! "$2" == --* && ! "$2" == -* ]]; then
           # Add key-value pair to JSON
           local value="$2"
