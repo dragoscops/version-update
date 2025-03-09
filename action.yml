@@ -39,7 +39,7 @@ runs:
         source ${{ github.workspace }}/src/git.sh
 
         git_get_commit_message --store
-        git_get_last_tag --store
+        git_get_last_created_tag --store
       shell: bash
 
     # - name: Increase Version and Commit the Changes
