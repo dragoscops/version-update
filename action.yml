@@ -33,13 +33,20 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Prerequisites
-      id: prerequisites
+    - name: Git Prerequisites
+      id: git_prerequisites
       run: |
         source ${{ github.workspace }}/src/git.sh
 
         git_get_commit_message --store
         git_get_last_created_tag --store
+      shell: bash
+    - name: Workspace Prerequisites
+      id: ws_prerequisites
+      run: |
+        source ${{ github.workspace }}/src/project.sh
+
+        gather_workspaces_info "${{ inputs.workspaces }}" --store
       shell: bash
 
     # - name: Increase Version and Commit the Changes
