@@ -4,6 +4,7 @@
 
 <!-- ![GitHub Marketplace](https://img.shields.io/badge/available_on-GitHub%20Marketplace-blue) -->
 ![License](https://img.shields.io/github/license/dragoscops/version-update)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/dragoscops/version-update?labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit%20Reviews)
 
 Automate the process of versioning your projects with the 
 [Version Update Action](https://github.com/dragoscops/version-update). 
