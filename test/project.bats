@@ -15,8 +15,8 @@ source "./src/version.sh"
 source "./test/helpers.sh"
 
 @test "gather_workspaces_info returns the root project details" {
-  init_text_project ./tmp/git_text_project
-  cd ./tmp/git_text_project
+  init_text_project $PROJECT_ROOT/tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
 
   git init
   git_setup_user
@@ -24,11 +24,11 @@ source "./test/helpers.sh"
   git commit -am "chore: text project init"
   git tag v$(text_detect_version)
 
-  init_deno_project ./tmp/git_text_project/packages/deno
-  init_go_project ./tmp/git_text_project/packages/go
-  init_node_project ./tmp/git_text_project/packages/node
+  init_deno_project $PROJECT_ROOT/tmp/git_text_project/packages/deno
+  init_go_project $PROJECT_ROOT/tmp/git_text_project/packages/go
+  init_node_project $PROJECT_ROOT/tmp/git_text_project/packages/node
 
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   text_update_version "1.1.0"
   git tag v$(text_detect_version)
 
@@ -41,7 +41,7 @@ source "./test/helpers.sh"
 }
 
 @test "gather_workspaces_info with --store parameter" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   export GITHUB_OUTPUT="$(mktemp)"
 
   # Run gather_workspaces_info with --store parameter
@@ -60,8 +60,8 @@ source "./test/helpers.sh"
 }
 
 @test "gather_workspaces_info returns the packages details" {
-  init_text_project ./tmp/git_text_project
-  cd ./tmp/git_text_project
+  init_text_project $PROJECT_ROOT/tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
 
   git init
   git_setup_user
@@ -69,11 +69,11 @@ source "./test/helpers.sh"
   git commit -am "chore: text project init"
   git tag v$(text_detect_version)
 
-  init_deno_project ./tmp/git_text_project/packages/deno
-  init_go_project ./tmp/git_text_project/packages/go
-  init_node_project ./tmp/git_text_project/packages/node
+  init_deno_project $PROJECT_ROOT/tmp/git_text_project/packages/deno
+  init_go_project $PROJECT_ROOT/tmp/git_text_project/packages/go
+  init_node_project $PROJECT_ROOT/tmp/git_text_project/packages/node
 
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   text_update_version "1.1.0"
   git add .
   git commit -am "chore: text project init"
@@ -88,19 +88,19 @@ source "./test/helpers.sh"
 }
 
 @test "gather_changed_workspaces_info returns the packages details" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   echo "$(date +%s)" > date.txt
   git add . && git commit -am "chore: changing main project"
 
-  cd ./tmp/git_text_project/packages/deno
+  cd $PROJECT_ROOT/tmp/git_text_project/packages/deno
   echo "$(date +%s)" > date.txt
   git add . && git commit -am "chore: changing deno project"
 
-  cd ./tmp/git_text_project/packages/node
+  cd $PROJECT_ROOT/tmp/git_text_project/packages/node
   echo "$(date +%s)" > date.txt
   git add . && git commit -am "chore: changing node project"
 
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
 
   # Run git_get_last_tag
   run gather_changed_workspaces_info \
@@ -113,7 +113,7 @@ source "./test/helpers.sh"
 }
 
 @test "gather_changed_workspaces_info with --store parameter" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   export GITHUB_OUTPUT="$(mktemp)"
 
   # Run gather_changed_workspaces_info with --store parameter
@@ -134,7 +134,7 @@ source "./test/helpers.sh"
 }
 
 @test "increase_workspaces_versions returns the packages details" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   echo "fix: $(date +%s)" > date.txt
   git add . && git commit -am "fix: changing main project"
 
@@ -152,7 +152,7 @@ source "./test/helpers.sh"
 }
 
 @test "increase_workspaces_versions with --store parameter" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   export GITHUB_OUTPUT="$(mktemp)"
   commit_message=$(git_get_commit_message)
   last_tag=$(git_get_last_created_tag)
@@ -175,7 +175,7 @@ source "./test/helpers.sh"
 }
 
 @test "update_workspaces_versions returns the packages details" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
 
   workspaces_info=".:text:git_text_project:1.1.1,packages/deno:deno:deno:1.0.1,packages/node:node:node:1.0.1"
   update_workspaces_versions --workspaces-info "$workspaces_info"
@@ -184,11 +184,11 @@ source "./test/helpers.sh"
   assert_success
   assert_output "1.1.1"
 
-  run echo $(cat ./tmp/git_text_project/packages/deno/deno.json | jq -r '.version')
+  run echo $(cat $PROJECT_ROOT/tmp/git_text_project/packages/deno/deno.json | jq -r '.version')
   assert_success
   assert_output "1.0.1"
 
-  run echo $(cat ./tmp/git_text_project/packages/node/package.json | jq -r '.version')
+  run echo $(cat $PROJECT_ROOT/tmp/git_text_project/packages/node/package.json | jq -r '.version')
   assert_success
   assert_output "1.0.1"
 }

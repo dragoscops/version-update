@@ -11,9 +11,9 @@ source "./src/git.sh"
 source "./test/helpers.sh"
 
 @test "git_setup_user configures git for Github" {
-  rm -rf ./tmp/git_text_project
-  init_text_project ./tmp/git_text_project
-  cd ./tmp/git_text_project
+  rm -rf $PROJECT_ROOT/tmp/git_text_project
+  init_text_project $PROJECT_ROOT/tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   git init
 
   git_setup_user
@@ -28,9 +28,9 @@ source "./test/helpers.sh"
 }
 
 @test "git_setup_user with gitea parameter" {
-  rm -rf ./tmp/git_text_project_gitea
-  init_text_project ./tmp/git_text_project_gitea
-  cd ./tmp/git_text_project_gitea
+  rm -rf $PROJECT_ROOT/tmp/git_text_project_gitea
+  init_text_project $PROJECT_ROOT/tmp/git_text_project_gitea
+  cd $PROJECT_ROOT/tmp/git_text_project_gitea
   git init
 
   git_setup_user --gitea
@@ -45,7 +45,7 @@ source "./test/helpers.sh"
 }
 
 @test "git_get_commit_message returns the last commit message, after initializing project" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
 
   git add .
   git commit -am "chore: text project init"
@@ -59,7 +59,7 @@ source "./test/helpers.sh"
 }
 
 @test "git_get_commit_message with store=true" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   # export GITHUB_OUTPUT="$(mktemp)"
   export GITHUB_OUTPUT="$(mktemp)"
   touch $(date +%s).txt
@@ -81,7 +81,7 @@ source "./test/helpers.sh"
 }
 
 @test "git_get_last_tag returns initial commit hash when no tags are present" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
 
   # Get the initial commit hash
   initial_commit_hash=$(git rev-list --max-parents=0 HEAD)
@@ -95,7 +95,7 @@ source "./test/helpers.sh"
 }
 
 @test "git_get_last_created_tag with store=true" {
-  cd ./tmp/git_text_project
+  cd $PROJECT_ROOT/tmp/git_text_project
   export GITHUB_OUTPUT="$(mktemp)"
   git tag v1.2.3
   
@@ -112,14 +112,14 @@ source "./test/helpers.sh"
 }
 
 # @test "git_get_commit_message returns the last commit message, after initializing packages" {
-#   cd ./tmp/git_text_project
+#   cd $PROJECT_ROOT/tmp/git_text_project
 
-#   init_deno_project ./tmp/git_text_project/packages/deno
-#   init_go_project ./tmp/git_text_project/packages/go
-#   init_node_project ./tmp/git_text_project/packages/node
+#   init_deno_project $PROJECT_ROOT/tmp/git_text_project/packages/deno
+#   init_go_project $PROJECT_ROOT/tmp/git_text_project/packages/go
+#   init_node_project $PROJECT_ROOT/tmp/git_text_project/packages/node
 #   git tag v$(text_detect_version)
 
-#   cd ./tmp/git_text_project
+#   cd $PROJECT_ROOT/tmp/git_text_project
 #   text_update_version "1.1.0"
 
 #   git add .
@@ -134,7 +134,7 @@ source "./test/helpers.sh"
 # }
 
 # @test "git_get_last_tag returns the latest tag when tags are present" {
-#   cd ./tmp/git_text_project
+#   cd $PROJECT_ROOT/tmp/git_text_project
 #   git tag v$(text_detect_version)
 
 #   # Run git_get_last_tag
