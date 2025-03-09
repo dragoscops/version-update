@@ -36,6 +36,8 @@ runs:
     - name: Git Prerequisites
       id: git_prerequisites
       run: |
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
         source ${{ github.workspace }}/src/git.sh
 
         git_get_commit_message --store
@@ -44,6 +46,8 @@ runs:
     - name: Workspace Prerequisites
       id: ws_prerequisites
       run: |
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
         source ${{ github.workspace }}/src/project.sh
 
         gather_workspaces_info "${{ inputs.workspaces }}" --store
