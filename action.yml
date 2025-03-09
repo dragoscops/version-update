@@ -61,6 +61,7 @@ runs:
       shell: bash
 
     - name: Increase Version and Commit the Changes
+      id: version_increase
       if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
@@ -82,6 +83,22 @@ runs:
           --store
 
         git diff
+
+    - name: Push new Version
+      if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/git.sh
+
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_version_update.sh
+        source ${{ github.workspace }}/src/project.sh
+
+        update_workspaces_versions --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}"
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
 
     # - name: Determine Changed Packages
     #   id: workspaces_info
