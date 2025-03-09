@@ -96,7 +96,8 @@ runs:
         source ${{ github.workspace }}/src/package_version_update.sh
         source ${{ github.workspace }}/src/project.sh
 
-        update_workspaces_versions --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}"
+        update_workspaces_versions \
+          --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}"
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 
