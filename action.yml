@@ -46,6 +46,7 @@ runs:
     - name: Workspace Prerequisites
       id: ws_prerequisites
       run: |
+        set -ex
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
         source ${{ github.workspace }}/src/package_version_detect.sh
