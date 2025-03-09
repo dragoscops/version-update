@@ -46,26 +46,36 @@ runs:
     - name: Workspace Prerequisites
       id: ws_prerequisites
       run: |
-        set -ex
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
+        
         source ${{ github.workspace }}/src/package_version_detect.sh
         source ${{ github.workspace }}/src/package_name_detect.sh
         source ${{ github.workspace }}/src/project.sh
 
-        gather_workspaces_info --workspaces "${{ inputs.workspaces }}" --store
+        # gather_workspaces_info --workspaces "${{ inputs.workspaces }}" --store
+        gather_changed_workspaces_info --workspaces "${{ inputs.workspaces }}" --last_tag "${{ steps.git_prerequisites.outputs.last_tag }}" --store
       shell: bash
 
-    # - name: Increase Version and Commit the Changes
-    #   if: ${{ github.event_name == 'push' }}
-    #   shell: bash
-    #   run: |
-    #     source ${{ github.workspace }}/src/logging.sh
-    #     source ${{ github.workspace }}/src/utils.sh
-    #     source ${{ github.workspace }}/src/package_version_detect.sh
-    #     source ${{ github.workspace }}/src/package_version_update.sh
+    - name: Increase Version and Commit the Changes
+      if: ${{ github.event_name == 'push' }}
+      shell: bash
+      run: |
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/git.sh
 
-    #     git_setup_user
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_version_update.sh
+        source ${{ github.workspace }}/src/project.sh
+
+        git_setup_user
+
+        increase_workspaces_versions \
+          --workspaces-info "${{ steps.ws_prerequisites.outputs.changed_workspaces_info }}" \
+          --commit-message "${{ steps.git_prerequisites.outputs.commit_message }}"
+
+        git diff
 
     # - name: Determine Changed Packages
     #   id: workspaces_info
