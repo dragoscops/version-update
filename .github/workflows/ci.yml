@@ -42,7 +42,8 @@ jobs:
 
           sudo add-apt-repository ppa:rmescandon/yq
           sudo apt update
-          sudo apt install yq -y
+          curl -sSL https://github.com/mikefarah/yq/releases/download/v4.45.1/yq_darwin_amd64 -o /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
 
           cargo install cargo-set-version
       - name: Run Tests
