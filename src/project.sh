@@ -73,23 +73,26 @@ gather_changed_workspaces_info() {
 }
 
 increase_workspaces_versions() {
-  # Parse arguments using parse_arguments function
   local args_json=$(parse_arguments "$@")
   local store=$(echo "$args_json" | jq -r '.store // false')
   local workspaces_info=$(echo "$args_json" | jq -r '.workspaces_info // ""')
   local commit_message=$(echo "$args_json" | jq -r '.commit_message // ""')
+  local last_tag=$(echo "$args_json" | jq -r '.tag // ""')
 
   local updated_workspaces_info=""
   
   if [ -z "$workspaces_info" ]; then
-    do_error "No workspaces info provided. Please specify --workspaces_info."
+    do_error "No workspaces info provided. Please specify --workspaces-info."
   fi
 
   if [ -z "$commit_message" ]; then
-    do_error "No commit message provided. Please specify --commit_message."
+    do_error "No commit message provided. Please specify --commit-message."
   fi
 
-  local last_tag=$(git_get_last_created_tag)
+  if [ -z "$last_tag" ]; then
+    do_error "No last tag provided. Please specify --tag."
+  fi
+
   
   IFS=',' read -r -a workspaces_info_array <<< "$workspaces_info"
   for workspace_info in "${workspaces_info_array[@]}"; do

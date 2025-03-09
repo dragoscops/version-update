@@ -144,7 +144,7 @@ source "./test/helpers.sh"
     --workspaces ".:text,packages/deno:deno,packages/go:go,packages/node:node" \
     --tag "$last_tag")
 
-  run increase_workspaces_versions --workspaces-info "$changed_workspaces_info" --commit-message "$commit_message"
+  run increase_workspaces_versions --workspaces-info "$changed_workspaces_info" --commit-message "$commit_message" --tag "$last_tag"
 
   # Verify that the output matches the latest tag
   assert_success
@@ -160,7 +160,7 @@ source "./test/helpers.sh"
     --workspaces ".:text,packages/deno:deno,packages/go:go,packages/node:node" \
     --tag "$last_tag")
 
-  run increase_workspaces_versions --workspaces-info "$changed_workspaces_info" --commit-message "$commit_message" --store
+  run increase_workspaces_versions --workspaces-info "$changed_workspaces_info" --commit-message "$commit_message" --tag "$last_tag" --store
 
   # Verify output
   assert_success
