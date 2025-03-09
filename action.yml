@@ -38,18 +38,20 @@ runs:
       if: ${{ github.event_name == 'push' }}
       shell: bash
       run: |
-        git_setup_user
+        echo ${{ github.workspace }}/src/git.sh
 
-        git_get_commit_message --store
-        # git_get_pr_message --store
-        get_get_last_tag --store
+    #     git_setup_user
 
-    - name: Determine Changed Packages
-      id: workspaces_info
-      if: ${{ github.event_name == 'push' }}
-      shell: bash
-      run: |
-        gather_changed_workspaces_info "${{ inputs.workspaces }}" "${{ steps.git_info.outputs.last_tag }}"
+    #     git_get_commit_message --store
+    #     # git_get_pr_message --store
+    #     get_get_last_tag --store
+
+    # - name: Determine Changed Packages
+    #   id: workspaces_info
+    #   if: ${{ github.event_name == 'push' }}
+    #   shell: bash
+    #   run: |
+    #     gather_changed_workspaces_info "${{ inputs.workspaces }}" "${{ steps.git_info.outputs.last_tag }}"
 
     # - name: Version Info
     #   id: version_info
