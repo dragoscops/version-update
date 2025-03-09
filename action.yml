@@ -33,18 +33,24 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Commit Info
-      id: git_info
-      if: ${{ github.event_name == 'push' }}
-      shell: bash
+    - name: Prerequisites
+      id: prerequisites
       run: |
-        cat ${{ github.workspace }}/src/git.sh
+        source ${{ github.workspace }}/src/git.sh
+
+        git_get_commit_message --store
+        git_get_pr_message --store
+        get_get_last_tag --store
+    # - name: Increase Version and Commit the Changes
+    #   if: ${{ github.event_name == 'push' }}
+    #   shell: bash
+    #   run: |
+    #     source ${{ github.workspace }}/src/logging.sh
+    #     source ${{ github.workspace }}/src/utils.sh
+    #     source ${{ github.workspace }}/src/package_version_detect.sh
+    #     source ${{ github.workspace }}/src/package_version_update.sh
 
     #     git_setup_user
-
-    #     git_get_commit_message --store
-    #     # git_get_pr_message --store
-    #     get_get_last_tag --store
 
     # - name: Determine Changed Packages
     #   id: workspaces_info
