@@ -78,7 +78,7 @@ runs:
         increase_workspaces_versions \
           --workspaces-info "${{ steps.ws_prerequisites.outputs.changed_workspaces_info }}" \
           --commit-message "${{ steps.git_prerequisites.outputs.commit_message }}" \
-          --last-tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
+          --tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
           --store
 
         git diff
