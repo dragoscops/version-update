@@ -54,7 +54,10 @@ runs:
         source ${{ github.workspace }}/src/project.sh
 
         # gather_workspaces_info --workspaces "${{ inputs.workspaces }}" --store
-        gather_changed_workspaces_info --workspaces "${{ inputs.workspaces }}" --last_tag "${{ steps.git_prerequisites.outputs.last_tag }}" --store
+        gather_changed_workspaces_info \
+          --workspaces "${{ inputs.workspaces }}" \
+          --tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
+          --store
       shell: bash
 
     - name: Increase Version and Commit the Changes
