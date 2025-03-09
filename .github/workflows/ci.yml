@@ -19,30 +19,30 @@ jobs:
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Setup Node
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: 22
-      # - name: Setup Deno
-      #   uses: denoland/setup-deno@v2
-      #   with:
-      #     deno-version: v2.x
-      # - name: Setup Go
-      #   uses: actions/setup-go@v5
-      #   with:
-      #     go-version: ">=1.17.0"
-      # - name: Setup Python
-      #   uses: actions/setup-python@v5
-      #   with:
-      #     python-version: "3.13"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ">=1.17.0"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
       - name: Install Dependencies
         run: |
           sudo apt update
           sudo apt install -y jq yq
 
           cargo install cargo-set-version
-      # - name: Run Tests
-      #   run: |
-      #     task test
+      - name: Run Tests
+        run: |
+          task test
       - name: Increase Version
         uses: ./

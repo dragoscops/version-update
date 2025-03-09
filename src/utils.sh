@@ -28,59 +28,67 @@ parse_arguments() {
   # Check if jq is available
   fail_at_missing_command "jq"
   
-  local args_array=()
-  local positional=()
+  # Initialize an empty JSON object
+  local json="{}"
+  local positional_args=()
   
   while [[ "$#" -gt 0 ]]; do
     case $1 in
       --*)
         # Handle --option value pairs
         local key="${1:2}" # Remove leading --
-        if [[ "$#" -gt 1 && ! "$2" == --* ]]; then
-          # It's a key-value pair
-          args_array+=("--arg" "$key" "$2")
+        if [[ "$#" -gt 1 && ! "$2" == --* && ! "$2" == -* ]]; then
+          # Add key-value pair to JSON
+          local value="$2"
+          # Use printf to handle special characters consistently across systems
+          json=$(printf '%s' "$json" | jq --arg k "$key" --arg v "$value" '. + {($k): $v}')
           shift
         else
           # It's a flag (--flag) with no value
-          args_array+=("--arg" "$key" "true")
+          json=$(printf '%s' "$json" | jq --arg k "$key" '. + {($k): true}')
         fi
         ;;
       -*)
         # Handle short options (-h, -v)
         local key="${1:1}" # Remove leading -
-        if [[ "$#" -gt 1 && ! "$2" == -* ]]; then
-          # It's a key-value pair
-          args_array+=("--arg" "$key" "$2")
+        if [[ "$#" -gt 1 && ! "$2" == --* && ! "$2" == -* ]]; then
+          # Add key-value pair to JSON
+          local value="$2"
+          json=$(printf '%s' "$json" | jq --arg k "$key" --arg v "$value" '. + {($k): $v}')
           shift
         else
           # It's a flag (-h) with no value
-          args_array+=("--arg" "$key" "true")
+          json=$(printf '%s' "$json" | jq --arg k "$key" '. + {($k): true}')
         fi
         ;;
       *)
-        # Handle positional arguments
-        positional+=("$1")
+        # Store positional arguments for later processing
+        positional_args+=("$1")
         ;;
     esac
     shift
   done
   
-  # Start with an empty JSON object
-  local json="{}"
-  
-  # Add named arguments to the JSON object
-  for ((i=0; i<${#args_array[@]}; i+=3)); do
-    json=$(jq "${args_array[i]}" "${args_array[i+1]}" "${args_array[i+2]}" \
-          '. + {($ARGS.named): $ARGS.positional}' \
-          --null-input --args "$json")
-  done
-  
   # Add positional arguments if they exist
-  if [[ ${#positional[@]} -gt 0 ]]; then
-    # Convert positional array to JSON array
-    local pos_json=$(printf '%s\n' "${positional[@]}" | jq -R . | jq -s .)
-    json=$(jq --argjson pos "$pos_json" '. + {"positional": $pos}' <<< "$json")
+  if [[ ${#positional_args[@]} -gt 0 ]]; then
+    # Create a JSON array from positional arguments
+    local pos_array="["
+    local first=true
+    for arg in "${positional_args[@]}"; do
+      if [[ "$first" == "true" ]]; then
+        first=false
+      else
+        pos_array+=","
+      fi
+      # Properly escape quotes in the argument
+      arg="${arg//\"/\\\"}"
+      pos_array+="\"$arg\""
+    done
+    pos_array+="]"
+    
+    # Add positional array to the JSON object
+    json=$(printf '%s' "$json" | jq --argjson pos "$pos_array" '. + {"positional": $pos}')
   fi
   
-  echo "$json"
+  echo "$json" | jq -c .
 }
