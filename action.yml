@@ -48,6 +48,8 @@ runs:
       run: |
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_name_detect.sh
         source ${{ github.workspace }}/src/project.sh
 
         gather_workspaces_info "${{ inputs.workspaces }}" --store
