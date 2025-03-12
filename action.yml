@@ -96,130 +96,19 @@ runs:
         source ${{ github.workspace }}/src/package_version_update.sh
         source ${{ github.workspace }}/src/project.sh
 
-        update_workspaces_versions \
-          --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}"
+        updated_versions=$(update_workspaces_versions \
+          --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}")
+
+        # if [[ -z "${{ inputs.no_pr }}" ]]; then
+        #   git_create_version_branch \
+        #     --versions "${updated_version}" \
+        #     --pr-title-prefix "${{ inputs.version_message }}"
+        # else
+        #   git_commit_version_changes \
+        #     --version "${main_workspace_version}"
+        # fi
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
-
-    # - name: Determine Changed Packages
-    #   id: workspaces_info
-    #   if: ${{ github.event_name == 'push' }}
-    #   shell: bash
-    #   run: |
-    #     gather_changed_workspaces_info "${{ inputs.workspaces }}" "${{ steps.git_info.outputs.last_tag }}"
-
-    # - name: Version Info
-    #   id: version_info
-    #   if: ${{ github.event_name == 'push' }}
-    #   shell: bash
-    #   run: |
-    #     commit_message="${{ steps.git_info.outputs.commit_message }}"
-
-    #     increment=""
-    #     if [[ "$commit_message" == "feat!:"* || "$commit_message" == "feature!:"* || "$commit_message" == *"BREAKING CHANGE"* ]]; then
-    #       increment="major"
-    #     elif [[ "$commit_message" == "feat:"* || "$commit_message" == "feature:"* ]]; then
-    #       increment="minor"
-    #     elif [[ "$commit_message" == "fix:"* ]]; then
-    #       increment="patch"
-    #     fi
-    #     echo "increment=${increment}"
-    #     echo "increment=${increment}" >> $GITHUB_OUTPUT
-
-    #     pre_release_id=""
-    #     if [[ "$commit_message" == "(rc"* || "$commit_message" == "(release-candidate"* ]]; then
-    #       pre_release_id=$(echo "$commit_message" | grep -oP '\((rc|release-candidate)(?::\K[^)]*|)\)' | sed 's/^$/rc/')
-    #     fi
-    #     echo "pre_release_id=${pre_release_id}"
-    #     echo "pre_release_id=${pre_release_id}" >> $GITHUB_OUTPUT
-
-    # - name: Increase Versions
-    #   if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.workspaces_info.outputs.packages != '[]' }}
-    #   shell: bash
-    #   run: |
-    #     source ${{ github.workspace }}/action_lib.sh
-
-    #     ws_regex='^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$'
-    #     # loop over all packages
-    #     echo '${{ steps.workspaces_info.outputs.packages }}' | jq -c '.[]' | while read ws; do
-    #       # if package is empty, continue
-    #       if [[ -z "$ws" ]]; then continue; fi
-    #       # if package is not changed, continue
-    #       ws_changed=$(echo "$ws" | jq -r '.changed // 0')
-    #       if [[ $ws_changed -eq 0 ]]; then continue; fi
-
-    #       # extract variables
-    #       ws_path=$(echo "$ws" | jq -r '.path')
-    #       ws_version_file=$(echo "$ws" | jq -r '.version_file')
-    #       ws_version=$(echo "$ws" | jq -r '.version')
-
-    #       echo "::group::Increasing version for workspace $ws_path $ws_version_file $ws_version"
-
-    #       # extract version chunks according to semver.org
-    #       read -r ws_version_major ws_version_minor ws_version_patch ws_version_prerelease ws_version_build <<< $(
-    #         echo "$ws_version" | awk '
-    #           BEGIN {
-    #             # Corrected character class: hyphen at the beginning to avoid range issues
-    #             FS = "[-.+]"
-    #             OFS = " "
-    #           }
-    #           {
-    #             # Use a robust regex to match semantic versioning
-    #             match($0, /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.+-]+))?(?:\+([0-9A-Za-z.+-]+))?$/, arr)
-
-    #             # Assign captured groups to variables
-    #             major = arr[1]
-    #             minor = arr[2]
-    #             patch = arr[3]
-    #             prerelease = arr[4]
-    #             build = arr[5]
-
-    #             # Print the components separated by spaces
-    #             print major, minor, patch, prerelease, build
-    #           }'
-    #       )
-
-    #       if [[ -z "$ws_version_major" ]]; then
-    #         echo "Invalid semantic version: $version" >&2
-    #         exit 1
-    #       fi
-
-    #       # increase version chunks according to conventionalcommits.org
-    #       case "${{ steps.version_info.outputs.increment }}" in
-    #         major) ws_version_major=$((ws_version_major + 1));;
-    #         minor) ws_version_minor=$((ws_version_minor + 1));;
-    #         patch) ws_version_patch=$((ws_version_patch + 1));;
-    #         *) echo "Invalid increment."; exit 1;;
-    #       esac
-
-    #       # prepare pre-release id if required
-    #       if [[ -n "${{ steps.version_info.outputs.pre_release_id }}" ]]; then
-    #         version_prerelease="${{ steps.version_info.outputs.pre_release_id }}"
-    #         ws_version_build=${ws_version_build:-0}
-    #         if [[ "$ws_version_prerelease" != "$version_prerelease" ]]; then
-    #           ws_version_prerelease=$version_prerelease
-    #           ws_version_build=0
-    #         fi
-    #         ws_version_build=$((ws_version_build + 1))
-    #       else
-    #         ws_version_prerelease=""
-    #       fi
-
-    #       # compose increased version
-    #       version="$ws_version_major.$ws_version_minor.$ws_version_patch"
-    #       if [[ -n "$ws_version_prerelease" ]]; then
-    #         version="$version-$ws_version_prerelease.$ws_version_build"
-    #       fi
-
-    #       cd $ws_path
-
-    #       write_version "$ws_version_file" "$version"
-    #       echo "$ws_path workspace version increased to $version"
-    #       cd ${{ github.workspace }}
-    #       echo '::endgroup::'
-    #     done
-
-    # # TODO: add a step to build changelogs per workspace
 
     # - name: Build Versions List
     #   if: ${{ github.event_name == 'push' }}

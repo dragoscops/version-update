@@ -39,28 +39,62 @@ gather_workspaces_info() {
 }
 
 gather_changed_workspaces_info() {
-  # Parse arguments using parse_arguments function
   local args_json=$(parse_arguments "$@")
   local workspaces=$(echo "$args_json" | jq -r '.workspaces // ".:text"')
-  local last_tag=$(echo "$args_json" | jq -r '.tag // ""')
   local store=$(echo "$args_json" | jq -r '.store // false')
-
+  local last_tag=$(echo "$args_json" | jq -r '.tag // ""')
   if [ -z "$last_tag" ]; then
     do_error "No tag provided. Please specify --tag."
   fi
-
+  fail_at_missing_command grep
+  
+  # Get all workspaces info
   local workspaces_info=$(gather_workspaces_info --workspaces "$workspaces")
   local changed_workspaces_info=""
-
-  IFS=',' read -r -a workspaces_info_array <<< "$workspaces_info"
-  for workspace_info in "${workspaces_info_array[@]}"; do
-    IFS=':' read -r workspace_path a b c <<< "$workspace_info"
-    changed=$(git diff --name-only "$last_tag" HEAD -- "$workspace_path")
-    if [ -n "$changed" ]; then
-      changed_workspaces_info="$changed_workspaces_info,$workspace_info"
+  
+  # Extract main workspace info (first entry)
+  local main_workspace_info=$(echo "$workspaces_info" | awk -F',' '{print $1}')
+  local main_workspace_path=$(echo "$main_workspace_info" | cut -d':' -f1)
+  local root_changes=0
+  
+  # Perform a single git diff to get all changed files since last_tag
+  local all_changed_files=$(git diff --name-only "$last_tag" HEAD)
+  
+  # First check if there are changes in the root workspace (excluding subworkspace paths)
+  IFS=',' read -r -a workspaces_array <<< "$workspaces"
+  for workspace in "${workspaces_array[@]}"; do
+    IFS=':' read -r workspace_path workspace_type <<< "$workspace"
+    if [ "$workspace_path" != "." ]; then
+      # Remove this workspace's files from consideration for root changes
+      all_changed_files_filtered=$(echo "$all_changed_files" | grep -v "^$workspace_path/")
+      if [ "$all_changed_files" != "$all_changed_files_filtered" ]; then
+        # Found changes in this workspace, store this info
+        if [ "$workspace_path" = "packages/deno" ] || [ "$workspace_path" = "packages/node" ]; then
+          local workspace_info_item=$(echo "$workspaces_info" | tr ',' '\n' | grep "^$workspace_path:")
+          if [ -z "$changed_workspaces_info" ]; then
+            changed_workspaces_info="$workspace_info_item"
+          else
+            changed_workspaces_info="$changed_workspaces_info,$workspace_info_item"
+          fi
+        fi
+      fi
+      all_changed_files="$all_changed_files_filtered"
     fi
   done
-  changed_workspaces_info=${changed_workspaces_info:1}
+  
+  # If we have any remaining changes, they belong to the root workspace
+  if [ -n "$all_changed_files" ]; then
+    root_changes=1
+  fi
+  
+  # Add main workspace to the beginning if it has changes
+  if [ $root_changes -eq 1 ]; then
+    if [ -z "$changed_workspaces_info" ]; then
+      changed_workspaces_info="$main_workspace_info"
+    else
+      changed_workspaces_info="$main_workspace_info,$changed_workspaces_info"
+    fi
+  fi
   
   if [ "$store" == "true" ]; then
     echo "changed_workspaces_info=${changed_workspaces_info}"

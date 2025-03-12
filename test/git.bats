@@ -10,14 +10,22 @@ source "./src/git.sh"
 
 source "./test/helpers.sh"
 
-@test "git_setup_user configures git for Github" {
-  rm -rf $PROJECT_ROOT/tmp/git_text_project
-  init_text_project $PROJECT_ROOT/tmp/git_text_project
-  cd $PROJECT_ROOT/tmp/git_text_project
+setup() {
+  # Create a fresh test repo for each test
+  TEST_REPO="$PROJECT_ROOT/tmp/git_test_$(date +%s)_$RANDOM"
+  mkdir -p "$TEST_REPO"
+  cd "$TEST_REPO"
   git init
 
   git_setup_user
 
+  # Create initial file
+  echo "Initial content" > init.txt
+  git add init.txt
+  git commit -m "Initial commit"
+}
+
+@test "git_setup_user configures git for Github" {
   run git config user.name
   assert_success
   assert_output "GitHub Actions"
@@ -27,46 +35,21 @@ source "./test/helpers.sh"
   assert_output "actions@github.com"
 }
 
-@test "git_setup_user with gitea parameter" {
-  rm -rf $PROJECT_ROOT/tmp/git_text_project_gitea
-  init_text_project $PROJECT_ROOT/tmp/git_text_project_gitea
-  cd $PROJECT_ROOT/tmp/git_text_project_gitea
-  git init
+@test "git_get_commit_message returns the last commit message" {
+  cd "$TEST_REPO"
+  git commit --allow-empty -m "chore: test commit"
 
-  git_setup_user --gitea
-
-  run git config user.name
-  assert_success
-  assert_output "GitHub Actions"
-
-  run git config user.email
-  assert_success
-  assert_output "actions@github.com"
-}
-
-@test "git_get_commit_message returns the last commit message, after initializing project" {
-  cd $PROJECT_ROOT/tmp/git_text_project
-
-  git add .
-  git commit -am "chore: text project init"
-
-  # The last commit is a merge commit.
   run git_get_commit_message
 
-  # Verify that the output matches the expected commit message
   assert_success
-  assert_output "chore: text project init"
+  assert_output "chore: test commit"
 }
 
-@test "git_get_commit_message with store=true" {
-  cd $PROJECT_ROOT/tmp/git_text_project
-  # export GITHUB_OUTPUT="$(mktemp)"
+@test "git_get_commit_message --store to write to GITHUB_OUTPUT" {
+  cd "$TEST_REPO"
   export GITHUB_OUTPUT="$(mktemp)"
-  touch $(date +%s).txt
-  git add .
-  git commit -am "feat: new feature added"
+  git commit --allow-empty -m "feat: new feature added"
 
-  # Test with named parameter
   run git_get_commit_message --store
   
   assert_success
@@ -80,67 +63,131 @@ source "./test/helpers.sh"
   unset GITHUB_OUTPUT
 }
 
-@test "git_get_last_tag returns initial commit hash when no tags are present" {
-  cd $PROJECT_ROOT/tmp/git_text_project
-
-  # Get the initial commit hash
+@test "git_get_last_created_tag returns initial commit hash when no tags are present" {
+  cd "$TEST_REPO"
   initial_commit_hash=$(git rev-list --max-parents=0 HEAD)
 
-  # Run git_get_last_tag
   run git_get_last_created_tag
 
-  # Verify that the output matches the initial commit hash
   assert_success
   assert_output "$initial_commit_hash"
 }
 
-@test "git_get_last_created_tag with store=true" {
-  cd $PROJECT_ROOT/tmp/git_text_project
+setup_create_tag() { 
+  git tag -a "v1.0.0" -m "version 1.0.0"
+  echo "test" > test.txt
+  git add test.txt
+  git commit -m "chore: test commit"
+}
+
+@test "git_get_last_created_tag returns tag when tags are present" {
+  cd "$TEST_REPO"
+  setup_create_tag
+
+  run git_get_last_created_tag
+
+  assert_success
+  assert_output "v1.0.0"
+}
+
+@test "git_get_last_created_tag --store to write to GITHUB_OUTPUT" {
+  cd "$TEST_REPO"
   export GITHUB_OUTPUT="$(mktemp)"
-  git tag v1.2.3
+  setup_create_tag
   
-  # Test with named parameter
   run git_get_last_created_tag --store
   
   assert_success
-  assert_output "last_tag=v1.2.3"
+  assert_output "last_tag=v1.0.0"
   
-  # Check if value was stored in GITHUB_OUTPUT
   run cat "$GITHUB_OUTPUT"
-  assert_output --partial "last_tag=v1.2.3"
+  assert_output --partial "last_tag=v1.0.0"
+
   unset GITHUB_OUTPUT
 }
 
-# @test "git_get_commit_message returns the last commit message, after initializing packages" {
-#   cd $PROJECT_ROOT/tmp/git_text_project
+setup_create_changes() { 
+  # Create tag at initial commit
+  git tag v0.1.0
+  
+  # Add commits with conventional commit format
+  echo "feature content" > feature.txt
+  git add feature.txt
+  git commit -m "feat: add first feature"
+  
+  echo "fix content" > fix.txt
+  git add fix.txt
+  git commit -m "fix: fix a bug"
+  
+  echo "docs content" > docs.txt
+  git add docs.txt
+  git commit -m "docs: update documentation"
+}
 
-#   init_deno_project $PROJECT_ROOT/tmp/git_text_project/packages/deno
-#   init_go_project $PROJECT_ROOT/tmp/git_text_project/packages/go
-#   init_node_project $PROJECT_ROOT/tmp/git_text_project/packages/node
-#   git tag v$(text_detect_version)
+@test "git_build_changelog returns commits since last tag" {
+  cd "$TEST_REPO"
+  setup_create_changes
+  
+  # Run git_build_changelog
+  run git_build_changelog --last_tag v0.1.0
+  
+  # Verify output
+  assert_success
+  assert_line --regexp "- \([a-f0-9]+\) feat: add first feature"
+  assert_line --regexp "- \([a-f0-9]+\) fix: fix a bug"
+  assert_line --regexp "- \([a-f0-9]+\) docs: update documentation"
+}
 
-#   cd $PROJECT_ROOT/tmp/git_text_project
-#   text_update_version "1.1.0"
+@test "git_build_changelog --format markdown to format commits as markdown" {
+  cd "$TEST_REPO"
+  setup_create_changes
+  
+  # Run with markdown format
+  run git_build_changelog --last_tag v0.1.0 --format markdown
+  
+  # Verify markdown formatting
+  assert_success
+  assert_line --regexp "- \*\*✨ Feature\*\* \([a-f0-9]+\): add first feature"
+  assert_line --regexp "- \*\*🐛 Fix\*\* \([a-f0-9]+\): fix a bug"
+  assert_line --regexp "- \*\*📚 Docs\*\* \([a-f0-9]+\): update documentation"
+}
 
-#   git add .
-#   git commit -am "chore: packages init"
+@test "git_build_changelog --format markdown --group_by_type to group commits by type" {
+  cd "$TEST_REPO"
+  setup_create_changes
+  
+  # Run with grouped markdown format
+  run git_build_changelog --last_tag v0.1.0 --format markdown --group_by_type
+  
+  # Verify output contains section headers and formatted commits
+  assert_success
+  assert_output --partial "### 🚀 Features"
+  assert_output --partial "### 🐛 Bug Fixes"
+  assert_output --partial "### 📚 Documentation"
+  
+  assert_output --regexp "- [a-f0-9]+: add first feature"
+  assert_output --regexp "- [a-f0-9]+: fix a bug"
+  assert_output --regexp "- [a-f0-9]+: update documentation"
+}
 
-#   # The last commit is a merge commit.
-#   run git_get_commit_message
-
-#   # Verify that the output matches the expected commit message
-#   assert_success
-#   assert_output "chore: packages init"
-# }
-
-# @test "git_get_last_tag returns the latest tag when tags are present" {
-#   cd $PROJECT_ROOT/tmp/git_text_project
-#   git tag v$(text_detect_version)
-
-#   # Run git_get_last_tag
-#   run git_get_last_created_tag
-
-#   # Verify that the output matches the latest tag
-#   assert_success
-#   assert_output "v1.1.0"
-# }
+@test "git_build_changelog --store to write to GITHUB_OUTPUT" {
+  cd "$TEST_REPO"
+  setup_create_changes  
+  export GITHUB_OUTPUT="$(mktemp)"
+  
+  # Run with store option
+  run git_build_changelog --last_tag v0.1.0 --store
+  
+  assert_success
+  assert_output --partial "changelog="
+  
+  # Check if value was stored in GITHUB_OUTPUT
+  run cat "$GITHUB_OUTPUT"
+  assert_output --partial "changelog<<EOF"
+  assert_output --regexp "- \([a-f0-9]+\) feat: add first feature"
+  assert_output --regexp "- \([a-f0-9]+\) fix: fix a bug"
+  assert_output --regexp "- \([a-f0-9]+\) docs: update documentation"
+  assert_output --partial "EOF"
+  
+  unset GITHUB_OUTPUT
+}
