@@ -25,3 +25,5 @@ RUN cd \
 VOLUME ["/app"]
 
 WORKDIR /app
+
+ENTRYPOINT ["task"]

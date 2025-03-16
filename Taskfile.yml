@@ -74,10 +74,11 @@ tasks:
       Executes the test suite using bats.
     cmds:
       - rm -rf ./tmp && mkdir ./tmp
-      # - ./test/bats/bin/bats -x ./test/
+      - ./test/bats/bin/bats -x ./test/
       # - ./test/bats/bin/bats -x ./test/git.bats
       # - ./test/bats/bin/bats -x ./test/logging.bats
       # - ./test/bats/bin/bats -x ./test/package_name_detect.bats
       # - ./test/bats/bin/bats -x ./test/package_version_detect.bats
-      - ./test/bats/bin/bats -x ./test/project.bats
+      # - ./test/bats/bin/bats -x ./test/package_version_update.bats
+      # - ./test/bats/bin/bats -x ./test/project.bats
       # - ./test/bats/bin/bats -x ./test/version.bats

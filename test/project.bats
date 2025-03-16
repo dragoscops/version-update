@@ -163,23 +163,22 @@ generate_workspace_changes() {
   unset GITHUB_OUTPUT
 }
 
-# @test "increase_workspaces_versions returns the packages details" {
-#   cd $PROJECT_ROOT/tmp/git_text_project
-#   echo "fix: $(date +%s)" > date.txt
-#   git add . && git commit -am "fix: changing main project"
+@test "increase_workspaces_versions increases versions on change packages and returns the details" {
+  cd $TEST_REPO
+  generate_workspace_changes
 
-#   commit_message=$(git_get_commit_message)
-#   last_tag=$(git_get_last_created_tag)
-#   changed_workspaces_info=$(gather_changed_workspaces_info \
-#     --workspaces ".:text,packages/deno:deno,packages/go:go,packages/node:node" \
-#     --tag "$last_tag")
+  commit_message=$(git_get_commit_message)
+  last_tag=$(git_get_last_created_tag)
+  changed_workspaces_info=$(gather_changed_workspaces_info \
+    --workspaces ".:text,packages/deno:deno,packages/go:go,packages/node:node" \
+    --tag "$last_tag")
 
-#   run increase_workspaces_versions --workspaces-info "$changed_workspaces_info" --commit-message "$commit_message" --tag "$last_tag"
+  run increase_workspaces_versions --workspaces-info "$changed_workspaces_info" --commit-message "$commit_message" --tag "$last_tag"
 
-#   # Verify that the output matches the latest tag
-#   assert_success
-#   assert_output ".:text:git_text_project:1.1.1,packages/deno:deno:deno:1.0.1,packages/node:node:node:1.0.1"
-# }
+  # Verify that the output matches the latest tag
+  assert_success
+  assert_output ".:text:$TEST_REPO_NAME:1.1.1,packages/deno:deno:deno:1.0.1,packages/node:node:node:1.0.1"
+}
 
 # @test "increase_workspaces_versions with --store parameter" {
 #   cd $PROJECT_ROOT/tmp/git_text_project
