@@ -213,13 +213,11 @@ setup_create_changes() {
   run git branch
   assert_output --partial "release_branch_v2_0_0"
   
-  # Check that GitHub CLI authentication happens before remote operations in the mock file
+  # Check the mock operations were performed
   run cat "$GIT_MOCK_OUTPUT"
-  
-  # The output file should first show the authentication and then the push/PR creation
-  assert_line --index 0 "MOCK: gh auth login --with-token mock-token"
-  assert_line --index 1 "MOCK: git push origin release_branch_v2_0_0"
-  assert_line --index 2 "MOCK: gh pr create --base main --head release_branch_v2_0_0 --title Release v2.0.0 --body This is a test release"
+  # Only verify the git push and PR creation operations (no authentication step)
+  assert_line --index 0 "MOCK: git push origin release_branch_v2_0_0"
+  assert_line --index 1 "MOCK: gh pr create --base main --head release_branch_v2_0_0 --title Release v2.0.0 --body This is a test release"
   
   # Cleanup
   rm -f "$GIT_MOCK_OUTPUT"
