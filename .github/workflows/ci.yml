@@ -49,3 +49,5 @@ jobs:
           task test
       - name: Increase Version
         uses: ./
+        with:
+          github_token: ${{ secrets.GH_TOKEN }}
