@@ -1,4 +1,4 @@
-git_setup_user() {
+#() {
   # Parse arguments using the new parse_arguments function
   local args_json=$(parse_arguments "$@")
   local gitea=$(echo "$args_json" | jq -r '.gitea // "false"')
