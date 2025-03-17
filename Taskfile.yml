@@ -66,6 +66,8 @@ tasks:
         - bats-assert for assertions
 
   test:
+    deps:
+      - test:bats:update
     desc: Run Unit Tests
     sources:
       - src/**/*
