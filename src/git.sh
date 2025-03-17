@@ -289,21 +289,46 @@ $other
   fi
 }
 
+# Mock command execution for testing
+_mock_command() {
+  if [ "${GIT_MOCK_COMMANDS:-false}" = "true" ]; then
+    echo "MOCK: $@" >> "${GIT_MOCK_OUTPUT:-/dev/null}"
+    return 0
+  else
+    "$@"
+  fi
+}
+
 git_create_version_branch() {
   local args_json=$(parse_arguments "$@")
   local version=$(echo "$args_json" | jq -r '.version // ""')
   local pr_title=$(echo "$args_json" | jq -r '.pr_title // ""')
   local pr_message=$(echo "$args_json" | jq -r '.pr_message // ""')
-
-  version_branh="release_branch_v${version//./_}"
-
-  git checkout -b $version_branch
-  git add .
-  git commit -am "chore: ${pr_title}"
-  git push origin $version_branch
-
-  gh pr create --base main --head "$version_branch" \
+  
+  if [ -z "$version" ]; then
+    do_error "No version provided. Please specify --version."
+  fi
+  
+  if [ -z "$pr_title" ]; then
+    do_error "No PR title provided. Please specify --pr_title."
+  fi
+  
+  local version_branch="release_branch_v${version//./_}"
+  
+  # Create branch locally - redirect output to /dev/null to suppress
+  git checkout -b "$version_branch" > /dev/null 2>&1
+  
+  # Add all changes and commit - redirect output to suppress
+  git add . > /dev/null 2>&1
+  git commit -am "chore: ${pr_title}" > /dev/null 2>&1 || true
+  
+  # Push to remote and create PR - these operations are mockable
+  _mock_command git push origin "$version_branch"
+  _mock_command gh pr create --base main --head "$version_branch" \
     --title "${pr_title}" --body "${pr_message}"
+    
+  # Only return the branch name
+  echo "$version_branch"
 }
 
 git_commit_version_changes() {
@@ -311,19 +336,46 @@ git_commit_version_changes() {
   local version=$(echo "$args_json" | jq -r '.version // ""')
   local pr_title=$(echo "$args_json" | jq -r '.pr_title // ""')
   local pr_message=$(echo "$args_json" | jq -r '.pr_message // ""')
-
-  git add .
-  git commit -am "chore: ${pr_title} ${pr_message}"
-  git push origin main
-
-  git_create_tag --version "$version" --tag_message "$pr_title"
+  
+  if [ -z "$version" ]; then
+    do_error "No version provided. Please specify --version."
+  fi
+  
+  if [ -z "$pr_title" ]; then
+    do_error "No PR title provided. Please specify --pr_title."
+  fi
+  
+  # Add all changes and commit
+  git add . > /dev/null 2>&1
+  git commit -am "chore: ${pr_title} ${pr_message}" > /dev/null 2>&1
+  
+  # Push to remote - mockable
+  _mock_command git push origin main
+  
+  # Create tag - capture and discard the output
+  git_create_tag --version "$version" --tag_message "$pr_title" > /dev/null
+  
+  echo "Version $version committed"
 }
 
 git_create_tag() {
   local args_json=$(parse_arguments "$@")
   local version=$(echo "$args_json" | jq -r '.version // ""')
   local tag_message=$(echo "$args_json" | jq -r '.tag_message // ""')
-
-  git tag -a "v$version" -m "$tag_message"
-  git push origin "v$version"
-# }
+  
+  if [ -z "$version" ]; then
+    do_error "No version provided. Please specify --version."
+  fi
+  
+  if [ -z "$tag_message" ]; then
+    do_error "No tag message provided. Please specify --tag_message."
+  fi
+  
+  # Create the tag locally
+  git tag -a "v$version" -m "$tag_message" > /dev/null 2>&1
+  
+  # Push the tag to remote - mockable
+  _mock_command git push origin "v$version"
+  
+  echo "v$version"
+}

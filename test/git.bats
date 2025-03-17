@@ -191,3 +191,100 @@ setup_create_changes() {
   
   unset GITHUB_OUTPUT
 }
+
+# Tests for the newly implemented git functions with mocking
+
+@test "git_create_version_branch creates branch and mocks remote operations" {
+  cd "$TEST_REPO"
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
+  
+  # Run the function with mock enabled
+  run git_create_version_branch --version "2.0.0" --pr_title "Release v2.0.0" --pr_message "This is a test release"
+  
+  # Verify the function completed successfully
+  assert_success
+  # Check that it returns the branch name
+  assert_output "release_branch_v2_0_0"
+  
+  # Verify that git created the branch locally
+  run git branch
+  assert_output --partial "release_branch_v2_0_0"
+  
+  # Check that the mock file contains the expected commands
+  run cat "$GIT_MOCK_OUTPUT"
+  assert_output --partial "MOCK: git push origin release_branch_v2_0_0"
+  assert_output --partial "MOCK: gh pr create --base main --head release_branch_v2_0_0 --title Release v2.0.0 --body This is a test release"
+  
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+}
+
+@test "git_commit_version_changes commits and mocks remote operations" {
+  cd "$TEST_REPO"
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
+  
+  # Make a change to be committed
+  echo "New content" > test-changes.txt
+  
+  # Run the function with mock enabled
+  run git_commit_version_changes --version "2.1.0" --pr_title "Release v2.1.0" --pr_message "Another test release"
+  
+  # Verify the function completed successfully
+  assert_success
+  assert_output "Version 2.1.0 committed"
+  
+  # Verify that git made the commit locally
+  run git log -1 --pretty=%s
+  assert_output "chore: Release v2.1.0 Another test release"
+  
+  # Check that the tag was created locally
+  run git tag
+  assert_output --partial "v2.1.0"
+  
+  # Check that the mock file contains the expected remote operations
+  run cat "$GIT_MOCK_OUTPUT"
+  assert_output --partial "MOCK: git push origin main"
+  assert_output --partial "MOCK: git push origin v2.1.0"
+  
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+}
+
+@test "git_create_tag creates tag and mocks push operation" {
+  cd "$TEST_REPO"
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
+  
+  # Run the function with mock enabled
+  run git_create_tag --version "3.0.0" --tag_message "Tagging version 3.0.0"
+  
+  # Verify the function completed successfully
+  assert_success
+  assert_output "v3.0.0"
+  
+  # Verify that git created the tag locally
+  run git tag -l "v3.0.0"
+  assert_output "v3.0.0"
+  
+  # Verify the tag message
+  run git tag -l --format='%(contents)' "v3.0.0"
+  assert_output --partial "Tagging version 3.0.0"
+  
+  # Check that the mock file contains the expected push command
+  run cat "$GIT_MOCK_OUTPUT"
+  assert_output "MOCK: git push origin v3.0.0"
+  
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+}
