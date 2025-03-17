@@ -99,14 +99,14 @@ runs:
         updated_versions=$(update_workspaces_versions \
           --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}")
 
-        # if [[ -z "${{ inputs.no_pr }}" ]]; then
-        #   git_create_version_branch \
-        #     --versions "${updated_version}" \
-        #     --pr-title-prefix "${{ inputs.version_message }}"
-        # else
-        #   git_commit_version_changes \
-        #     --version "${main_workspace_version}"
-        # fi
+        if [[ -z "${{ inputs.no_pr }}" ]]; then
+          git_create_version_branch \
+            --versions "${updated_version}" \
+            --pr-title-prefix "${{ inputs.version_message }}"
+        else
+          git_commit_version_changes \
+            --version "${main_workspace_version}"
+        fi
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
 

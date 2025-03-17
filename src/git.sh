@@ -289,41 +289,41 @@ $other
   fi
 }
 
-# git_create_version_branch() {
-#   local args_json=$(parse_arguments "$@")
-#   local version=$(echo "$args_json" | jq -r '.version // ""')
-#   local pr_title=$(echo "$args_json" | jq -r '.pr_title // ""')
-#   local pr_message=$(echo "$args_json" | jq -r '.pr_message // ""')
+git_create_version_branch() {
+  local args_json=$(parse_arguments "$@")
+  local version=$(echo "$args_json" | jq -r '.version // ""')
+  local pr_title=$(echo "$args_json" | jq -r '.pr_title // ""')
+  local pr_message=$(echo "$args_json" | jq -r '.pr_message // ""')
 
-#   version_branh="release_branch_v${version//./_}"
+  version_branh="release_branch_v${version//./_}"
 
-#   git checkout -b $version_branch
-#   git add .
-#   git commit -am "chore: ${pr_title}"
-#   git push origin $version_branch
+  git checkout -b $version_branch
+  git add .
+  git commit -am "chore: ${pr_title}"
+  git push origin $version_branch
 
-#   gh pr create --base main --head "$version_branch" \
-#     --title "${pr_title}" --body "${pr_message}"
-# }
+  gh pr create --base main --head "$version_branch" \
+    --title "${pr_title}" --body "${pr_message}"
+}
 
-# git_commit_version_changes() {
-#   local args_json=$(parse_arguments "$@")
-#   local version=$(echo "$args_json" | jq -r '.version // ""')
-#   local pr_title=$(echo "$args_json" | jq -r '.pr_title // ""')
-#   local pr_message=$(echo "$args_json" | jq -r '.pr_message // ""')
+git_commit_version_changes() {
+  local args_json=$(parse_arguments "$@")
+  local version=$(echo "$args_json" | jq -r '.version // ""')
+  local pr_title=$(echo "$args_json" | jq -r '.pr_title // ""')
+  local pr_message=$(echo "$args_json" | jq -r '.pr_message // ""')
 
-#   git add .
-#   git commit -am "chore: ${pr_title} ${pr_message}"
-#   git push origin main
+  git add .
+  git commit -am "chore: ${pr_title} ${pr_message}"
+  git push origin main
 
-#   git_create_tag --version "$version" --tag_message "$pr_title"
-# }
+  git_create_tag --version "$version" --tag_message "$pr_title"
+}
 
-# git_create_tag() {
-#   local args_json=$(parse_arguments "$@")
-#   local version=$(echo "$args_json" | jq -r '.version // ""')
-#   local tag_message=$(echo "$args_json" | jq -r '.tag_message // ""')
+git_create_tag() {
+  local args_json=$(parse_arguments "$@")
+  local version=$(echo "$args_json" | jq -r '.version // ""')
+  local tag_message=$(echo "$args_json" | jq -r '.tag_message // ""')
 
-#   git tag -a "v$version" -m "$tag_message"
-#   git push origin "v$version"
+  git tag -a "v$version" -m "$tag_message"
+  git push origin "v$version"
 # }
