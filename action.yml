@@ -96,10 +96,14 @@ runs:
         source ${{ github.workspace }}/src/package_version_update.sh
         source ${{ github.workspace }}/src/project.sh
 
+        updated_version=$(echo "${{ steps.version_increase.outputs.updated_workspaces_info }}" | 
+          awk -F';' '{print $1}' | 
+          awk -F':' '{ print $NF }')
+
         if [[ -z "${{ inputs.no_pr }}" ]]; then
           git_create_version_branch \
             --version "${updated_version}" \
-            --pr-title "${{ inputs.version_message }} $(echo "${{ steps.version_increase.outputs.updated_workspaces_info }}" | awk -F';' '{print $1}' | awk -F':' '{ print $NF }')" \
+            --pr-title "${{ inputs.version_message }} ${updated_version}" \
             --pr-message "pr message"
         else
           git_commit_version_changes \
