@@ -199,6 +199,7 @@ setup_create_changes() {
   # Create a temporary file to store mock output
   export GIT_MOCK_COMMANDS="true"
   export GIT_MOCK_OUTPUT="$(mktemp)"
+  export GITHUB_TOKEN="mock-token"
   
   # Run the function with mock enabled
   run git_create_version_branch --version "2.0.0" --pr_title "Release v2.0.0" --pr_message "This is a test release"
@@ -212,15 +213,19 @@ setup_create_changes() {
   run git branch
   assert_output --partial "release_branch_v2_0_0"
   
-  # Check that the mock file contains the expected commands
+  # Check that GitHub CLI authentication happens before remote operations in the mock file
   run cat "$GIT_MOCK_OUTPUT"
-  assert_output --partial "MOCK: git push origin release_branch_v2_0_0"
-  assert_output --partial "MOCK: gh pr create --base main --head release_branch_v2_0_0 --title Release v2.0.0 --body This is a test release"
+  
+  # The output file should first show the authentication and then the push/PR creation
+  assert_line --index 0 "MOCK: gh auth login --with-token mock-token"
+  assert_line --index 1 "MOCK: git push origin release_branch_v2_0_0"
+  assert_line --index 2 "MOCK: gh pr create --base main --head release_branch_v2_0_0 --title Release v2.0.0 --body This is a test release"
   
   # Cleanup
   rm -f "$GIT_MOCK_OUTPUT"
   unset GIT_MOCK_COMMANDS
   unset GIT_MOCK_OUTPUT
+  unset GITHUB_TOKEN
 }
 
 @test "git_commit_version_changes commits and mocks remote operations" {

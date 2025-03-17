@@ -315,6 +315,9 @@ git_create_version_branch() {
   
   local version_branch="release_branch_v${version//./_}"
   
+  # Authenticate with GitHub CLI first - before any remote operations
+  _mock_command gh auth login --with-token "${GITHUB_TOKEN}"
+  
   # Create branch locally - redirect output to /dev/null to suppress
   git checkout -b "$version_branch" > /dev/null 2>&1
   
@@ -322,8 +325,10 @@ git_create_version_branch() {
   git add . > /dev/null 2>&1
   git commit -am "chore: ${pr_title}" > /dev/null 2>&1 || true
   
-  # Push to remote and create PR - these operations are mockable
+  # Push to remote - this operation is mockable
   _mock_command git push origin "$version_branch"
+  
+  # Create PR - this operation is mockable
   _mock_command gh pr create --base main --head "$version_branch" \
     --title "${pr_title}" --body "${pr_message}"
     
