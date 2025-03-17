@@ -101,8 +101,9 @@ runs:
 
         if [[ -z "${{ inputs.no_pr }}" ]]; then
           git_create_version_branch \
-            --versions "${updated_version}" \
-            --pr-title-prefix "${{ inputs.version_message }}"
+            --version "${updated_version}" \
+            --pr-title "${{ inputs.version_message }} $(echo "${updated_versions}" | awk -F';' '{print $1}' | awk -F':' '{ print $NF }')" \
+            --pr-message "pr message"
         else
           git_commit_version_changes \
             --version "${main_workspace_version}"
