@@ -46,6 +46,7 @@ jobs:
           cargo install cargo-set-version
       - name: Run Tests
         run: |
+          git submodule init
           task test
       - name: Increase Version
         uses: ./
