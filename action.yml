@@ -93,7 +93,7 @@ runs:
         # Configure git with authentication token
         git config --global url."https://x-access-token:${{ inputs.github_token }}@github.com/".insteadOf "https://github.com/"
       env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GH_TOKEN: ${{ inputs.github_token }}
 
     - name: Push new Version
       if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
@@ -122,4 +122,4 @@ runs:
             --pr-message "${{ inputs.version_message }} ${updated_version}"
         fi
       env:
-        GITHUB_TOKEN: ${{ inputs.github_token }}
+        GH_TOKEN: ${{ inputs.github_token }}
