@@ -107,6 +107,8 @@ runs:
         source ${{ github.workspace }}/src/package_version_update.sh
         source ${{ github.workspace }}/src/project.sh
 
+        set -ex
+
         updated_version=$(echo "${{ steps.version_increase.outputs.updated_workspaces_info }}" | 
           awk -F';' '{print $1}' | 
           awk -F':' '{ print $NF }')
@@ -118,7 +120,8 @@ runs:
             --pr-message "pr message"
         else
           git_commit_version_changes \
-            --version "${main_workspace_version}"
+            --version "${updated_version}" \
+            --pr-message "${{ inputs.version_message }} ${updated_version}"
         fi
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
