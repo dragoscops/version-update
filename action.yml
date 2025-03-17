@@ -61,7 +61,6 @@ runs:
     - name: Increase Version and Commit the Changes
       id: version_increase
       if: ${{ github.event_name == 'push' }}
-      shell: bash
       run: |
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
@@ -77,12 +76,12 @@ runs:
           --commit-message "${{ steps.git_prerequisites.outputs.commit_message }}" \
           --tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
           --store
-
-        git diff
+      shell: bash
 
     - name: Set up Git with Authentication
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
       if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
-      shell: bash
       run: |
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
@@ -92,12 +91,12 @@ runs:
         
         # Configure git with authentication token
         git config --global url."https://x-access-token:${{ inputs.github_token }}@github.com/".insteadOf "https://github.com/"
-      env:
-        GH_TOKEN: ${{ inputs.github_token }}
+      shell: bash
 
     - name: Push new Version
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
       if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
-      shell: bash
       run: |
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
@@ -121,5 +120,4 @@ runs:
             --version "${updated_version}" \
             --pr-message "${{ inputs.version_message }} ${updated_version}"
         fi
-      env:
-        GH_TOKEN: ${{ inputs.github_token }}
+      shell: bash
