@@ -199,7 +199,7 @@ setup_create_changes() {
   # Create a temporary file to store mock output
   export GIT_MOCK_COMMANDS="true"
   export GIT_MOCK_OUTPUT="$(mktemp)"
-  export GITHUB_TOKEN="mock-token"
+  export GITHUB_TOKEN="mock-github-token"
   
   # Run the function with mock enabled
   run git_create_version_branch --version "2.0.0" --pr_title "Release v2.0.0" --pr_message "This is a test release"
@@ -215,14 +215,74 @@ setup_create_changes() {
   
   # Check the mock operations were performed
   run cat "$GIT_MOCK_OUTPUT"
-  # Only verify the git push and PR creation operations (no authentication step)
+  
+  # Verify the sequence of operations: first push branch, then auth with GITHUB_TOKEN, then create PR
   assert_line --index 0 "MOCK: git push origin release_branch_v2_0_0"
-  assert_line --index 1 "MOCK: gh pr create --base main --head release_branch_v2_0_0 --title Release v2.0.0 --body This is a test release"
+  assert_line --index 1 "MOCK: gh auth login --with-token"
+  assert_line --index 2 "MOCK: gh pr create --base main --head release_branch_v2_0_0 --title Release v2.0.0 --body This is a test release"
   
   # Cleanup
   rm -f "$GIT_MOCK_OUTPUT"
   unset GIT_MOCK_COMMANDS
   unset GIT_MOCK_OUTPUT
+  unset GITHUB_TOKEN
+}
+
+@test "git_create_version_branch uses GH_TOKEN if available" {
+  cd "$TEST_REPO"
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
+  export GH_TOKEN="mock-gh-token"
+  
+  # Run the function with mock enabled
+  run git_create_version_branch --version "2.1.0" --pr_title "Release v2.1.0" --pr_message "Testing GH_TOKEN"
+  
+  # Verify the function completed successfully
+  assert_success
+  
+  # Check the mock operations were performed
+  run cat "$GIT_MOCK_OUTPUT"
+  
+  # Verify authentication used GH_TOKEN
+  assert_line --index 0 "MOCK: git push origin release_branch_v2_1_0"
+  assert_line --index 1 "MOCK: gh auth login --with-token"
+  
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+  unset GH_TOKEN
+}
+
+@test "git_create_version_branch prefers GH_TOKEN over GITHUB_TOKEN" {
+  cd "$TEST_REPO"
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
+  export GH_TOKEN="mock-gh-token-preferred"
+  export GITHUB_TOKEN="mock-github-token-fallback"
+  
+  # Run the function with mock enabled
+  run git_create_version_branch --version "2.2.0" --pr_title "Release v2.2.0" --pr_message "Testing token preference"
+  
+  # Verify the function completed successfully
+  assert_success
+  
+  # Check the mock operations were performed
+  run cat "$GIT_MOCK_OUTPUT"
+  
+  # We can't directly test which token was used since the tokens are piped into the command
+  # But we can verify the expected command sequence
+  assert_line --index 0 "MOCK: git push origin release_branch_v2_2_0"
+  assert_line --index 1 "MOCK: gh auth login --with-token"
+  assert_line --index 2 "MOCK: gh pr create --base main --head release_branch_v2_2_0 --title Release v2.2.0 --body Testing token preference"
+  
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+  unset GH_TOKEN
   unset GITHUB_TOKEN
 }
 

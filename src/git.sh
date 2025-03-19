@@ -325,6 +325,10 @@ git_create_version_branch() {
   # Push to remote - this operation is mockable
   _mock_command git push origin "$version_branch"
   
+  # Authenticate with GitHub CLI right before creating the PR
+  GH_TOKEN=${GH_TOKEN:-$GITHUB_TOKEN}
+  _mock_command gh auth login --with-token <<< "$GH_TOKEN"
+  
   # Create PR - this operation is mockable
   _mock_command gh pr create --base main --head "$version_branch" \
     --title "${pr_title}" --body "${pr_message}"
