@@ -87,6 +87,10 @@ runs:
         source ${{ github.workspace }}/src/utils.sh
         source ${{ github.workspace }}/src/git.sh
 
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_version_update.sh
+        source ${{ github.workspace }}/src/project.sh
+
         git_setup_user
 
         update_workspaces_versions --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}"
