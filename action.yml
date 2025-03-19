@@ -88,6 +88,8 @@ runs:
         source ${{ github.workspace }}/src/git.sh
 
         git_setup_user
+
+        update_workspaces_versions --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}"
         
         # Configure git with authentication token
         git config --global url."https://x-access-token:${{ inputs.github_token }}@github.com/".insteadOf "https://github.com/"

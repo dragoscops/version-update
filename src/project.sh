@@ -188,7 +188,7 @@ update_workspaces_versions() {
   local workspaces_info=$(echo "$args_json" | jq -r '.workspaces_info // ""')
   
   if [ -z "$workspaces_info" ]; then
-    do_error "No workspaces info provided. Please specify --workspaces_info."
+    do_error "No workspaces info provided. Please specify --workspaces-info."
   fi
   
   local main_workspace_path
