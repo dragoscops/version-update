@@ -52,6 +52,7 @@ jobs:
         run: |
           task test
       - name: Increase Version
+        if: ${{ github.event_name != 'pull_request' }}
         uses: ./
         with:
           github_token: ${{ secrets.GH_TOKEN }}
