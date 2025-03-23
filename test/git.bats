@@ -3,6 +3,7 @@
 load 'test_helper/bats-support/load'
 load 'test_helper/bats-assert/load'
 
+source "./src/logging.sh"
 source "./src/utils.sh"
 source "./src/package_version_detect.sh"
 source "./src/package_version_update.sh"
@@ -202,7 +203,7 @@ setup_create_changes() {
   export GITHUB_TOKEN="mock-token"
   
   # Run the function with mock enabled
-  run git_create_version_branch --version "2.0.0" --pr_title "Release v2.0.0" --pr_message "This is a test release"
+  run git_create_version_branch --version "2.0.0" --pr-title "Release v2.0.0" --pr-message "This is a test release" --merge-branch main
   
   # Verify the function completed successfully
   assert_success
@@ -236,7 +237,7 @@ setup_create_changes() {
   echo "New content" > test-changes.txt
   
   # Run the function with mock enabled
-  run git_commit_version_changes --version "2.1.0" --pr_title "Release v2.1.0" --pr_message "Another test release"
+  run git_commit_version_changes --version "2.1.0" --title "Release v2.1.0" --message "Another test release" --branch main
   
   # Verify the function completed successfully
   assert_success

@@ -13,6 +13,9 @@ inputs:
     description: Version pull request message
   no_pr:
     description: Use pull request to increase the version
+  target_branch:
+    description: Branch to save the version changes to (pull request or direct commit)
+    default: main
 
 outputs:
   version_branch:
@@ -119,11 +122,13 @@ runs:
         if [[ -z "${{ inputs.no_pr }}" ]]; then
           git_create_version_branch \
             --version "${updated_version}" \
+            --merge-branch "${{ inputs.target_branch }}" \
             --pr-title "${{ inputs.version_message }} ${updated_version}" \
             --pr-message "pr message"
         else
           git_commit_version_changes \
             --version "${updated_version}" \
+            --branch "${{ inputs.target_branch }}" \
             --pr-message "${{ inputs.version_message }} ${updated_version}"
         fi
       shell: bash

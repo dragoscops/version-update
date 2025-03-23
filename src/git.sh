@@ -302,15 +302,20 @@ _mock_command() {
 git_create_version_branch() {
   local args_json=$(parse_arguments "$@")
   local version=$(echo "$args_json" | jq -r '.version // ""')
+  local merge_branch=$(echo "$args_json" | jq -r '.merge_branch // ""')
   local pr_title=$(echo "$args_json" | jq -r '.pr_title // ""')
   local pr_message=$(echo "$args_json" | jq -r '.pr_message // ""')
   
   if [ -z "$version" ]; then
-    do_error "No version provided. Please specify --version."
+    do_error "No version provided. Please specify --version"
+  fi
+
+  if [ -z "$merge_branch" ]; then
+    do_error "No merge branch provided. Please specify --merge-branch"
   fi
   
   if [ -z "$pr_title" ]; then
-    do_error "No PR title provided. Please specify --pr_title."
+    do_error "No PR title provided. Please specify --pr-title"
   fi
   
   local version_branch="release_branch_v${version//./_}"
@@ -326,7 +331,7 @@ git_create_version_branch() {
   _mock_command git push origin "$version_branch"
   
   # Create PR - this operation is mockable
-  _mock_command gh pr create --base main --head "$version_branch" \
+  _mock_command gh pr create --base $merge_branch --head "$version_branch" \
     --title "${pr_title}" --body "${pr_message}"
     
   # Only return the branch name
@@ -336,26 +341,31 @@ git_create_version_branch() {
 git_commit_version_changes() {
   local args_json=$(parse_arguments "$@")
   local version=$(echo "$args_json" | jq -r '.version // ""')
-  local pr_title=$(echo "$args_json" | jq -r '.pr_title // ""')
-  local pr_message=$(echo "$args_json" | jq -r '.pr_message // ""')
+  local branch=$(echo "$args_json" | jq -r '.branch // ""')
+  local title=$(echo "$args_json" | jq -r '.title // ""')
+  local message=$(echo "$args_json" | jq -r '.message // ""')
   
   if [ -z "$version" ]; then
     do_error "No version provided. Please specify --version."
   fi
   
-  if [ -z "$pr_title" ]; then
-    do_error "No PR title provided. Please specify --pr_title."
+  if [ -z "$title" ]; then
+    do_error "No PR title provided. Please specify --title."
+  fi
+
+  if [ -z "$branch" ]; then
+    do_error "No merge branch provided. Please specify --branch"
   fi
   
   # Add all changes and commit
   git add . > /dev/null 2>&1
-  git commit -am "chore: ${pr_title} ${pr_message}" > /dev/null 2>&1
+  git commit -am "chore: ${title} ${message}" > /dev/null 2>&1
   
   # Push to remote - mockable
-  _mock_command git push origin main
+  _mock_command git push origin $branch
   
   # Create tag - capture and discard the output
-  git_create_tag --version "$version" --tag_message "$pr_title" > /dev/null
+  git_create_tag --version "$version" --tag_message "$title" > /dev/null
   
   echo "Version $version committed"
 }
