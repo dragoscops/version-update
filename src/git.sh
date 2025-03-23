@@ -313,7 +313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 EOF
 
   [ -f CHANGELOG.md ] && mv CHANGELOG.md CHANGELOG.md.bak
-  cat > CHANGELO.md <<EOF
+  cat > CHANGELOG.md <<EOF
 ## [$version] - $(date +%Y-%m-%d)
 
 $changes
@@ -373,39 +373,40 @@ git_create_version_branch() {
   echo "$version_branch"
 }
 
-git_commit_version_changes() {
-  local args_json=$(parse_arguments "$@")
-  local version=$(echo "$args_json" | jq -r '.version // ""')
-  local branch=$(echo "$args_json" | jq -r '.branch // ""')
-  local title=$(echo "$args_json" | jq -r '.title // ""')
-  local message=$(echo "$args_json" | jq -r '.message // ""')
+# git_commit_version_changes() {
+#   local args_json=$(parse_arguments "$@")
+#   local version=$(echo "$args_json" | jq -r '.version // ""')
+#   local branch=$(echo "$args_json" | jq -r '.branch // ""')
+#   local title=$(echo "$args_json" | jq -r '.title // ""')
+#   local message=$(echo "$args_json" | jq -r '.message // ""')
+#   local changelog=$(echo "$args_json" | jq -r '.changelog // ""')
   
-  if [ -z "$version" ]; then
-    do_error "No version provided. Please specify --version."
-  fi
+#   if [ -z "$version" ]; then
+#     do_error "No version provided. Please specify --version."
+#   fi
   
-  if [ -z "$title" ]; then
-    do_error "No PR title provided. Please specify --title."
-  fi
+#   if [ -z "$title" ]; then
+#     do_error "No title provided. Please specify --title."
+#   fi
 
-  if [ -z "$branch" ]; then
-    do_error "No merge branch provided. Please specify --branch"
-  fi
+#   if [ -z "$branch" ]; then
+#     do_error "No branch provided. Please specify --branch"
+#   fi
 
-  git_write_changelog --version "$version" --changes "$message"
+#   git_write_changelog --version "$version" --changes "$changelog"
   
-  # Add all changes and commit
-  git add . > /dev/null 2>&1
-  git commit -am "chore: ${title} ${message}" > /dev/null 2>&1
+#   # Add all changes and commit
+#   git add . > /dev/null 2>&1
+#   git commit -am "chore: ${title} ${message}" > /dev/null 2>&1
   
-  # Push to remote - mockable
-  _mock_command git push origin $branch
+#   # Push to remote - mockable
+#   _mock_command git push origin $branch
   
-  # Create tag - capture and discard the output
-  git_create_tag --version "$version" --tag_message "$title" > /dev/null
+#   # Create tag - capture and discard the output
+#   git_create_tag --version "$version" --tag_message "$title" > /dev/null
   
-  echo "Version $version committed"
-}
+#   echo "Version $version committed"
+# }
 
 git_create_tag() {
   local args_json=$(parse_arguments "$@")

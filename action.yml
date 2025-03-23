@@ -119,16 +119,21 @@ runs:
           awk -F';' '{print $1}' | 
           awk -F':' '{ print $NF }')
 
+        changelog=$(git_build_changelog \
+          --last-tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
+          --format markdown --group-by-type)
+
         if [[ -z "${{ inputs.no_pr }}" ]]; then
           git_create_version_branch \
             --version "${updated_version}" \
             --merge-branch "${{ inputs.target_branch }}" \
             --pr-title "${{ inputs.version_message }} ${updated_version}" \
-            --pr-message "pr message"
+            --pr-message "$changelog"
         else
           git_commit_version_changes \
             --version "${updated_version}" \
             --branch "${{ inputs.target_branch }}" \
-            --pr-message "${{ inputs.version_message }} ${updated_version}"
+            --message "${{ inputs.version_message }} ${updated_version}" \
+            --changelog "$changelog"
         fi
       shell: bash
