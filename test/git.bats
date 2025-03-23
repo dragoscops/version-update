@@ -130,7 +130,7 @@ setup_create_changes() {
   setup_create_changes
   
   # Run git_build_changelog
-  run git_build_changelog --last_tag v0.1.0
+  run git_build_changelog --last-tag v0.1.0
   
   # Verify output
   assert_success

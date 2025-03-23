@@ -289,6 +289,39 @@ $other
   fi
 }
 
+git_write_changelog() {
+  local args_json=$(parse_arguments "$@")
+  local version=$(echo "$args_json" | jq -r '.version // ""')
+  local changes=$(echo "$args_json" | jq -r '.changes // ""')
+  
+  if [ -z "$version" ]; then
+    do_error "No version provided. Please specify --version"
+  fi
+  
+  if [ -z "$changes" ]; then
+    do_error "No changes provided. Please specify --changes"
+  fi
+
+  # https://keepachangelog.com/en/1.1.0/
+  [ -f CHANGELOG.md ] || cat > CHANGELOG.md <<EOF
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+EOF
+
+  [ -f CHANGELOG.md ] && mv CHANGELOG.md CHANGELOG.md.bak
+  cat > CHANGELO.md <<EOF
+## [$version] - $(date +%Y-%m-%d)
+
+$changes
+EOF
+
+  [ -f CHANGELOG.md.bak ] && cat CHANGELOG.md.bak >> CHANGELOG.md && rm CHANGELOG.md.bak
+}
+
 # Mock command execution for testing
 _mock_command() {
   if [ "${GIT_MOCK_COMMANDS:-false}" = "true" ]; then
@@ -317,6 +350,8 @@ git_create_version_branch() {
   if [ -z "$pr_title" ]; then
     do_error "No PR title provided. Please specify --pr-title"
   fi
+
+  git_write_changelog --version "$version" --changes "$pr_message"
   
   local version_branch="release_branch_v${version//./_}"
   
@@ -356,6 +391,8 @@ git_commit_version_changes() {
   if [ -z "$branch" ]; then
     do_error "No merge branch provided. Please specify --branch"
   fi
+
+  git_write_changelog --version "$version" --changes "$message"
   
   # Add all changes and commit
   git add . > /dev/null 2>&1
