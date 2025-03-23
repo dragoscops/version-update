@@ -54,7 +54,6 @@ runs:
         source ${{ github.workspace }}/src/package_name_detect.sh
         source ${{ github.workspace }}/src/project.sh
 
-        # gather_workspaces_info --workspaces "${{ inputs.workspaces }}" --store
         gather_changed_workspaces_info \
           --workspaces "${{ inputs.workspaces }}" \
           --tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
@@ -136,4 +135,26 @@ runs:
             --message "${{ inputs.version_message }} ${updated_version}" \
             --changelog "$changelog"
         fi
+      shell: bash
+
+    - name: Push new Version
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      if: ${{ github.event_name == 'pull_request' }}
+      run: |
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/git.sh
+
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_version_update.sh
+        source ${{ github.workspace }}/src/project.sh
+
+        workspaces_info=$(gather_workspaces_info --workspaces "${{ inputs.workspaces }}")
+
+        updated_version=$(echo "$workspaces_info" | awk -F';' '{print $1}' | awk -F':' '{ print $NF }')
+
+        git_create_tag \
+          --tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
+          --message "${{ inputs.version_message }} ${updated_version}"
       shell: bash
