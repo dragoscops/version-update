@@ -34,6 +34,9 @@ outputs:
 runs:
   using: "composite"
   steps:
+    # Gathering Generic Data
+    #
+
     - name: Git Prerequisites
       id: git_prerequisites
       run: |
@@ -43,9 +46,15 @@ runs:
 
         git_get_commit_message --store
         git_get_last_created_tag --store
+        gather_workspaces_info --workspaces "${{ inputs.workspaces }}" --store
       shell: bash
+
+    # Gathering Version Increase Data
+    #
+
     - name: Workspace Prerequisites
       id: ws_prerequisites
+      if: ${{ github.event_name == 'push' }}
       run: |
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
@@ -59,6 +68,9 @@ runs:
           --tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
           --store
       shell: bash
+
+    # Increasing Version
+    #
 
     - name: Increase Version and Commit the Changes
       id: version_increase
@@ -101,7 +113,7 @@ runs:
         git config --global url."https://x-access-token:${{ inputs.github_token }}@github.com/".insteadOf "https://github.com/"
       shell: bash
 
-    - name: Push new Version
+    - name: Push new Version via Pull Request or Direct Commit
       env:
         GH_TOKEN: ${{ inputs.github_token }}
       if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
@@ -137,7 +149,10 @@ runs:
         fi
       shell: bash
 
-    - name: Push new Version
+    # Create Git Tag
+    #
+
+    - name: Create Git Tag
       env:
         GH_TOKEN: ${{ inputs.github_token }}
       if: ${{ github.event_name == 'pull_request' && contains(steps.git_prerequisites.outputs.commit_message, inputs.version_message) }}
@@ -149,8 +164,6 @@ runs:
         source ${{ github.workspace }}/src/package_version_detect.sh
         source ${{ github.workspace }}/src/package_version_update.sh
         source ${{ github.workspace }}/src/project.sh
-
-        workspaces_info=$(gather_workspaces_info --workspaces "${{ inputs.workspaces }}")
 
         updated_version=$(echo "$workspaces_info" | awk -F';' '{print $1}' | awk -F':' '{ print $NF }')
 
