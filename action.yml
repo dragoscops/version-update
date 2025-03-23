@@ -159,7 +159,7 @@ runs:
     - name: Create Git Tag
       env:
         GH_TOKEN: ${{ inputs.github_token }}
-      if: ${{ github.event_name == 'pull_request' && contains(steps.git_prerequisites.outputs.commit_message, inputs.version_message) }}
+      if: ${{ github.event_name == 'push' && contains(steps.git_prerequisites.outputs.commit_message, inputs.version_message) }}
       run: |
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
