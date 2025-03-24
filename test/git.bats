@@ -293,3 +293,103 @@ setup_create_changes() {
   unset GIT_MOCK_COMMANDS
   unset GIT_MOCK_OUTPUT
 }
+
+@test "git_create_tag deletes existing tag if it already exists" {
+  cd "$TEST_REPO"
+  # Create a tag that will need to be deleted
+  git tag -a "v4.0.0" -m "Existing tag 4.0.0"
+  
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
+  
+  # Run the function to recreate the tag
+  run git_create_tag --version "4.0.0" --tag_message "Updated tag 4.0.0"
+  
+  # Verify the function completed successfully
+  assert_success
+  assert_output "v4.0.0"
+  
+  # Verify that git created the new tag locally
+  run git tag -l "v4.0.0"
+  assert_output "v4.0.0"
+  
+  # Verify the updated tag message
+  run git tag -l --format='%(contents)' "v4.0.0"
+  assert_output --partial "Updated tag 4.0.0"
+  
+  # Check that the mock file contains the expected commands
+  run cat "$GIT_MOCK_OUTPUT"
+  assert_output "MOCK: git push origin v4.0.0"
+  
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+}
+
+@test "git_create_tag with refresh_minor creates minor version tag" {
+  cd "$TEST_REPO"
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
+  
+  # Run the function with refresh_minor
+  run git_create_tag --version "3.2.5" --tag_message "Tag with minor version" --refresh_minor true
+  
+  # Verify the function completed successfully
+  assert_success
+  assert_output "v3.2.5"
+  
+  # Verify that both tags were created locally
+  run git tag -l "v3.2.5"
+  assert_output "v3.2.5"
+  
+  run git tag -l "v3.2"
+  assert_output "v3.2"
+  
+  # Check that the mock file contains both push commands
+  run cat "$GIT_MOCK_OUTPUT"
+  assert_line --index 0 "MOCK: git push origin v3.2.5"
+  assert_line --index 1 "MOCK: git push origin v3.2"
+  
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+}
+
+@test "git_create_tag with refresh_minor deletes existing minor tag if needed" {
+  cd "$TEST_REPO"
+  # Create tags that will need to be deleted
+  git tag -a "v5.3.1" -m "Existing tag 5.3.1"
+  git tag -a "v5.3" -m "Existing minor tag 5.3"
+  
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
+  
+  # Run the function to recreate both tags
+  run git_create_tag --version "5.3.1" --tag_message "Updated tag 5.3.1" --refresh_minor true
+  
+  # Verify the function completed successfully
+  assert_success
+  assert_output "v5.3.1"
+  
+  # Verify both tags were updated
+  run git tag -l --format='%(contents)' "v5.3.1"
+  assert_output --partial "Updated tag 5.3.1"
+  
+  run git tag -l --format='%(contents)' "v5.3"
+  assert_output --partial "Updated tag 5.3.1"
+  
+  # Check that the mock file contains the push commands
+  run cat "$GIT_MOCK_OUTPUT"
+  assert_line --index 0 "MOCK: git push origin v5.3.1"
+  assert_line --index 1 "MOCK: git push origin v5.3"
+  
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+}

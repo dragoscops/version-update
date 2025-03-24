@@ -375,7 +375,7 @@ git_create_version_branch() {
 }
 
 git_commit_version_changes() {
-  local args_json=$(parse_arguments "$@")
+  local args_json=$(parse_arguments $@")
   local version=$(echo "$args_json" | jq -r '.version // ""')
   local branch=$(echo "$args_json" | jq -r '.branch // ""')
   local title=$(echo "$args_json" | jq -r '.title // ""')
@@ -413,6 +413,7 @@ git_create_tag() {
   local args_json=$(parse_arguments "$@")
   local version=$(echo "$args_json" | jq -r '.version // ""')
   local tag_message=$(echo "$args_json" | jq -r '.tag_message // ""')
+  local refresh_minor=$(echo "$args_json" | jq -r '.refresh_minor // "false"')
   
   if [ -z "$version" ]; then
     do_error "No version provided. Please specify --version."
@@ -423,7 +424,10 @@ git_create_tag() {
   fi
 
   if git rev-parse "v$version" >/dev/null 2>&1; then
-    do_error "Tag v$version already exists."
+    # Delete existing tag instead of erroring
+    do_info "Tag v$version already exists, deleting it"
+    git tag -d "v$version"
+    git push origin :refs/tags/"v$version" || true
   fi
   
   # Create the tag locally
@@ -431,6 +435,23 @@ git_create_tag() {
   
   # Push the tag to remote - mockable
   _mock_command git push origin "v$version"
+
+  # If refresh_minor is true, also push the minor version tag
+  if [ "$refresh_minor" = "true" ]; then
+    local minor_version=$(echo "$version" | awk -F. '{print $1 "." $2}')
+    if git rev-parse "v$minor_version" >/dev/null 2>&1; then
+      # Delete existing tag instead of erroring
+      do_info "Tag v$minor_version already exists, deleting it"
+      git tag -d "v$minor_version"
+      git push origin :refs/tags/"v$minor_version" || true
+    fi
+    
+    # Create the tag locally
+    git tag -a "v$minor_version" -m "$tag_message" > /dev/null 2>&1
+
+    # Push the tag to remote - mockable
+    _mock_command git push origin "v$minor_version"
+  fi
   
   echo "v$version"
 }

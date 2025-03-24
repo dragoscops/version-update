@@ -52,8 +52,13 @@ jobs:
         run: |
           task test
       - name: Increase Version
+        id: version_step
         uses: ./
         with:
           github_token: ${{ secrets.GH_TOKEN }}
           target_branch: ${{ github.ref }}
           no_pr: true
+      - name: Output Results
+        run: |
+          echo "Version Tag: ${{ steps.version_step.outputs.tag }}"
+          echo "Status: ${{ steps.version_step.outputs.status }}"

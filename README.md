@@ -2,7 +2,7 @@
 
 **GitHub Action for Automated Version Management**
 
-<!-- ![GitHub Marketplace](https://img.shields.io/badge/available_on-GitHub%20Marketplace-blue) -->
+![GitHub Marketplace](https://img.shields.io/badge/available_on-GitHub%20Marketplace-blue)
 ![License](https://img.shields.io/github/license/dragoscops/version-update)
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/dragoscops/version-update?labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit%20Reviews)
 
@@ -25,7 +25,6 @@ This GitHub Action detects changes in specified workspaces, determines the appro
   - [Basic Usage](#basic-usage)
   - [Monorepo Handling](#monorepo-handling)
   - [Direct Commit Without PR](#direct-commit-without-pr)
-  - [Dry Run Mode](#dry-run-mode)
 - [Customization](#customization)
 - [Contributing](#contributing)
 - [License](#license)
@@ -38,28 +37,32 @@ This GitHub Action detects changes in specified workspaces, determines the appro
 - **Automatic Version Bumping:** Determines whether to increment major, minor, or patch versions based on commit messages.
 - **Multi-Workspace Support:** Manage multiple projects or packages within a single repository (monorepo).
 - **Semantic Versioning:** Enforces [Semantic Versioning](https://semver.org/) principles.
-- **Flexible Configuration:** Customize workspaces, version files, commit messages, and Git operations.
+- **Flexible Configuration:** Customize workspaces, commit messages, and Git operations.
 - **Pull Request Integration:** Optionally creates pull requests for version updates.
 - **Tagging:** Automatically tags releases with the new version.
-- **Supports Multiple Languages:** Compatible with Node.js, Python, Go, Deno, TypeScript, and more.
+- **Supports Multiple Languages:** Compatible with various programming languages and mono repo through customizable workspaces.
 
 ---
 
 ## Supported Languages and Version Files
 
-The action supports a variety of programming languages and their respective version file formats. Extendable via the `action_lib.sh` script to support additional types.
+The action is designed to be flexible and can work with various project types through the workspace configuration.
 
-### Supported Version Files
+### Supported Languages and Version Files
 
-- **Node.js:** `package.json`
-- **Python:**
-  - `__init__.py`
+Based on the detection scripts, the action supports:
+
+- **Node.js/JavaScript:** `package.json`, `jsr.json`
+- **Deno:** `deno.json`, `deno.jsonc`, `jsr.json`, `package.json`
+- **Python:** 
+  - `pyproject.toml` (Poetry, Flit, or standard format)
+  - `setup.cfg`
   - `setup.py`
-  - `pyproject.toml`
 - **Go:** `go.mod`
-- **Deno:** `deno.jsonc`, `mod.ts`, `version.ts`
-- **Generic:** `name`, `NAME`, `name.txt`, `NAME.txt`, `version`, `VERSION`, `version.txt`, `VERSION.txt`
-- **Others:** Extendable by modifying `action_lib.sh`
+- **Rust:** `Cargo.toml`
+- **Text/Generic:** `version`, `VERSION`, `version.txt`, `VERSION.txt`
+
+Each workspace can specify its type to determine how version detection and updating will be handled.
 
 ---
 
@@ -84,24 +87,22 @@ The action supports a variety of programming languages and their respective vers
 
 ## Inputs
 
-| Input         | Description                                                                 | Required | Default              |
-|---------------|-----------------------------------------------------------------------------|----------|----------------------|
-| `github_token`| **Required.** GitHub Token for performing Git operations (commits, PRs).   | Yes      | N/A                  |
-| `workspaces`  | Paths to the workspaces within the repository, separated by commas.         | No       | `.`                  |
-| `version_files`| Version files to look for in each workspace, separated by commas.          | No       | `package.json`       |
-| `version_message`| Commit message for the version update.                                  | No       | `version pull request`|
-| `no_pr`       | If set, the action will commit changes directly without creating a PR.     | No       | `false`              |
-| `dry_run`     | If set, the action will not make any changes but will print commands.       | No       | `false`              |
+| Input              | Description                                                    | Required | Default              |
+|--------------------|----------------------------------------------------------------|----------|----------------------|
+| `github_token`     | **Required.** GitHub Token for performing Git operations.      | Yes      | N/A                  |
+| `workspaces`       | Paths to the workspaces within the repository, with type designation (e.g., ".:text"). Separated by commas. | No | `.:text` |
+| `version_message`  | Version pull request message.                                  | No       | `version pull request`|
+| `no_pr`            | Set to any value to commit directly without creating a PR.     | No       | N/A                  |
+| `target_branch`    | Branch to save the version changes to (PR or direct commit).   | No       | `main`               |
 
 ---
 
 ## Outputs
 
-| Output           | Description                                     |
-|------------------|-------------------------------------------------|
-| `version_branch` | Name of the branch created for version updates. |
-| `pr_title`       | Title of the pull request created for version updates. |
-| `tag`            | Git tag that has been pushed to the repository. |
+| Output   | Description                                      |
+|----------|--------------------------------------------------|
+| `tag`    | Git tag that has been pushed to the repository.  |
+| `status` | Status of the version increase (`success` or `failed`). |
 
 ---
 
@@ -124,6 +125,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Important for git history
 
       - name: Version Update
         uses: dragoscops/version-update@v1
@@ -133,7 +136,7 @@ jobs:
 
 ### Monorepo Handling
 
-Handle multiple workspaces (e.g., `packages/frontend`, `packages/backend`) with their respective version files.
+Handle multiple workspaces with their respective configuration.
 
 ```yaml
 name: Version Update Monorepo
@@ -148,19 +151,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Important for git history
 
       - name: Version Update
         uses: dragoscops/version-update@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workspaces: "packages/frontend,packages/backend"
-          version_files: "package.json,setup.py"
+          workspaces: ".:text;packages/frontend:javascript,packages/backend:python"
           version_message: "chore: update versions"
 ```
 
 ### Direct Commit Without PR
 
-Commit version changes directly without creating a pull request by setting `no_pr` to `true`.
+Commit version changes directly without creating a pull request by setting `no_pr`.
 
 ```yaml
 name: Version Update Direct Commit
@@ -175,37 +179,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Important for git history
 
       - name: Version Update
         uses: dragoscops/version-update@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          no_pr: true
-```
-
-### Dry Run Mode
-
-Run the action in dry run mode to see what changes would occur without applying them.
-
-```yaml
-name: Version Update Dry Run
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Version Update
-        uses: dragoscops/version-update@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          dry_run: true
+          no_pr: "true"
 ```
 
 ---
@@ -214,13 +195,14 @@ jobs:
 
 ### Defining Multiple Workspaces
 
-Customize the `workspaces` and `version_files` inputs to handle multiple projects within your repository.
+Customize the `workspaces` input to handle multiple projects within your repository.
 
 ```yaml
 with:
-  workspaces: "workspace1,workspace2,workspace3"
-  version_files: "package.json,setup.py,go.mod"
+  workspaces: "workspace1:type1,workspace2:type2,workspace3:type3"
 ```
+
+> **Important:** In a monorepo setup, the first workspace listed becomes the main workspace if you don't explicitly set the root directory (.:type). The main workspace's version is used for tag creation. In the example above, `workspace1:type1` will determine the version used for Git tags.
 
 ### Version Message
 
@@ -237,16 +219,16 @@ If you prefer direct commits over pull requests for version updates, enable the 
 
 ```yaml
 with:
-  no_pr: true
+  no_pr: "true"
 ```
 
-### Dry Run
+### Target Branch
 
-Enable `dry_run` to simulate the action without making any changes. Useful for testing.
+Specify a different target branch for pull requests or direct commits.
 
 ```yaml
 with:
-  dry_run: true
+  target_branch: "develop"
 ```
 
 ---

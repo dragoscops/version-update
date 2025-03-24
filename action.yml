@@ -18,18 +18,12 @@ inputs:
     default: main
 
 outputs:
-  version_branch:
-    description: Name of the version branch
-    value: "${{ steps.version_branch.outputs.version_branch }}"
-  pr_title:
-    description: Title of the version pull request
-    value: "${{ steps.version_branch.outputs.pr_title }}"
   tag:
     description: Tag to have been pushed
-    value: "${{ steps.tag_info.outputs.tag }}"
-  # status:
-  #   dexscription: Status of the version increase
-  #   value: "${{ steps. }}"
+    value: "${{ steps.push_new_version.outputs.tag || steps.git_create_tag.outputs.tag || '' }}"
+  status:
+    description: Status of the version increase
+    value: "${{ (steps.push_new_version.outcome == 'success' || steps.git_create_tag.outcome == 'success') && 'success' || 'failed' }}"
 
 runs:
   using: "composite"
@@ -120,6 +114,7 @@ runs:
     - name: Push new Version via Pull Request or Direct Commit
       env:
         GH_TOKEN: ${{ inputs.github_token }}
+      id: push_new_version
       if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
       run: |
         source ${{ github.workspace }}/src/logging.sh
@@ -133,6 +128,11 @@ runs:
         updated_version=$(echo "${{ steps.version_increase.outputs.updated_workspaces_info }}" | 
           awk -F';' '{print $1}' | 
           awk -F':' '{ print $NF }')
+    
+        echo "tag=${commit_message}"
+        echo "tag<<EOF" >> $GITHUB_OUTPUT
+        echo "${tag}" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
 
         changelog=$(git_build_changelog \
           --last-tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
@@ -160,6 +160,7 @@ runs:
     - name: Create Git Tag
       env:
         GH_TOKEN: ${{ inputs.github_token }}
+      id: git_create_tag
       if: ${{ github.event_name == 'push' && contains(steps.git_prerequisites.outputs.commit_message, inputs.version_message) }}
       run: |
         source ${{ github.workspace }}/src/logging.sh
@@ -177,4 +178,9 @@ runs:
         git_create_tag \
           --version "${updated_version}" \
           --tag-message "${{ inputs.version_message }} ${updated_version}"
+    
+        echo "tag=${commit_message}"
+        echo "tag<<EOF" >> $GITHUB_OUTPUT
+        echo "v${tag}" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
       shell: bash
