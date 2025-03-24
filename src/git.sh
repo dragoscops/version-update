@@ -420,6 +420,10 @@ git_create_tag() {
   if [ -z "$tag_message" ]; then
     do_error "No tag message provided. Please specify --tag-message."
   fi
+
+  if git rev-parse "v$version" >/dev/null 2>&1; then
+    do_error "Tag v$version already exists."
+  fi
   
   # Create the tag locally
   git tag -a "v$version" -m "$tag_message" > /dev/null 2>&1
