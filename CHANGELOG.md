@@ -1,3 +1,9 @@
+## [1.1.11] - 2025-03-24
+
+### 🐛 Bug Fixes
+
+- b7177bd: fixing no_pr flow 1742848745
+- be787e6: fixed changelog testing
 ## [1.1.10] - 2025-03-24
 
 ### 🐛 Bug Fixes
