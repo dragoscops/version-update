@@ -14,6 +14,7 @@ source "./test/helpers.sh"
 setup() {
   # Create a fresh test repo for each test
   TEST_REPO="$PROJECT_ROOT/tmp/git_test_$(date +%s)_$RANDOM"
+  _MOCK_CHANGELOG_FILE="$TEST_REPO/CHANGELOG.md"
   mkdir -p "$TEST_REPO"
   cd "$TEST_REPO"
   git init
@@ -227,40 +228,40 @@ setup_create_changes() {
   unset GITHUB_TOKEN
 }
 
-# @test "git_commit_version_changes commits and mocks remote operations" {
-#   cd "$TEST_REPO"
-#   # Create a temporary file to store mock output
-#   export GIT_MOCK_COMMANDS="true"
-#   export GIT_MOCK_OUTPUT="$(mktemp)"
+@test "git_commit_version_changes commits and mocks remote operations" {
+  cd "$TEST_REPO"
+  # Create a temporary file to store mock output
+  export GIT_MOCK_COMMANDS="true"
+  export GIT_MOCK_OUTPUT="$(mktemp)"
   
-#   # Make a change to be committed
-#   echo "New content" > test-changes.txt
+  # Make a change to be committed
+  echo "New content" > test-changes.txt
   
-#   # Run the function with mock enabled
-#   run git_commit_version_changes --version "2.1.0" --title "Release v2.1.0" --message "Another test release" --branch main
+  # Run the function with mock enabled
+  run git_commit_version_changes --version "2.1.0" --title "Release v2.1.0" --message "Another test release" --branch main
   
-#   # Verify the function completed successfully
-#   assert_success
-#   assert_output "Version 2.1.0 committed"
+  # Verify the function completed successfully
+  assert_success
+  assert_output "Version 2.1.0 committed"
   
-#   # Verify that git made the commit locally
-#   run git log -1 --pretty=%s
-#   assert_output "chore: Release v2.1.0 Another test release"
+  # Verify that git made the commit locally
+  run git log -1 --pretty=%s
+  assert_output "chore: Release v2.1.0 Another test release"
   
-#   # Check that the tag was created locally
-#   run git tag
-#   assert_output --partial "v2.1.0"
+  # Check that the tag was created locally
+  run git tag
+  assert_output --partial "v2.1.0"
   
-#   # Check that the mock file contains the expected remote operations
-#   run cat "$GIT_MOCK_OUTPUT"
-#   assert_output --partial "MOCK: git push origin main"
-#   assert_output --partial "MOCK: git push origin v2.1.0"
+  # Check that the mock file contains the expected remote operations
+  run cat "$GIT_MOCK_OUTPUT"
+  assert_output --partial "MOCK: git push origin main"
+  assert_output --partial "MOCK: git push origin v2.1.0"
   
-#   # Cleanup
-#   rm -f "$GIT_MOCK_OUTPUT"
-#   unset GIT_MOCK_COMMANDS
-#   unset GIT_MOCK_OUTPUT
-# }
+  # Cleanup
+  rm -f "$GIT_MOCK_OUTPUT"
+  unset GIT_MOCK_COMMANDS
+  unset GIT_MOCK_OUTPUT
+}
 
 @test "git_create_tag creates tag and mocks push operation" {
   cd "$TEST_REPO"

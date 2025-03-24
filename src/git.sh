@@ -293,17 +293,18 @@ git_write_changelog() {
   local args_json=$(parse_arguments "$@")
   local version=$(echo "$args_json" | jq -r '.version // ""')
   local changes=$(echo "$args_json" | jq -r '.changes // ""')
+  local changelog_file=${_MOCK_CHANGELOG_FILE:-CHANGELOG.md}
   
   if [ -z "$version" ]; then
     do_error "No version provided. Please specify --version"
   fi
   
   if [ -z "$changes" ]; then
-    do_error "No changes provided. Please specify --changes"
+    return 0
   fi
 
   # https://keepachangelog.com/en/1.1.0/
-  [ -f CHANGELOG.md ] || cat > CHANGELOG.md <<EOF
+  [ -f $changelog_file ] || cat > $changelog_file <<EOF
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -312,14 +313,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 EOF
 
-  [ -f CHANGELOG.md ] && mv CHANGELOG.md CHANGELOG.md.bak
-  cat > CHANGELOG.md <<EOF
+  [ -f $changelog_file ] && mv $changelog_file $changelog_file.bak
+  cat > $changelog_file <<EOF
 ## [$version] - $(date +%Y-%m-%d)
 
 $changes
 EOF
 
-  [ -f CHANGELOG.md.bak ] && cat CHANGELOG.md.bak >> CHANGELOG.md && rm CHANGELOG.md.bak
+  [ -f $changelog_file.bak ] && cat $changelog_file.bak >> $changelog_file && rm $changelog_file.bak
 }
 
 # Mock command execution for testing
@@ -373,40 +374,40 @@ git_create_version_branch() {
   echo "$version_branch"
 }
 
-# git_commit_version_changes() {
-#   local args_json=$(parse_arguments "$@")
-#   local version=$(echo "$args_json" | jq -r '.version // ""')
-#   local branch=$(echo "$args_json" | jq -r '.branch // ""')
-#   local title=$(echo "$args_json" | jq -r '.title // ""')
-#   local message=$(echo "$args_json" | jq -r '.message // ""')
-#   local changelog=$(echo "$args_json" | jq -r '.changelog // ""')
+git_commit_version_changes() {
+  local args_json=$(parse_arguments "$@")
+  local version=$(echo "$args_json" | jq -r '.version // ""')
+  local branch=$(echo "$args_json" | jq -r '.branch // ""')
+  local title=$(echo "$args_json" | jq -r '.title // ""')
+  local message=$(echo "$args_json" | jq -r '.message // ""')
+  local changelog=$(echo "$args_json" | jq -r '.changelog // ""')
   
-#   if [ -z "$version" ]; then
-#     do_error "No version provided. Please specify --version."
-#   fi
+  if [ -z "$version" ]; then
+    do_error "No version provided. Please specify --version."
+  fi
   
-#   if [ -z "$title" ]; then
-#     do_error "No title provided. Please specify --title."
-#   fi
+  if [ -z "$title" ]; then
+    do_error "No title provided. Please specify --title."
+  fi
 
-#   if [ -z "$branch" ]; then
-#     do_error "No branch provided. Please specify --branch"
-#   fi
+  if [ -z "$branch" ]; then
+    do_error "No branch provided. Please specify --branch"
+  fi
 
-#   git_write_changelog --version "$version" --changes "$changelog"
+  git_write_changelog --version "$version" --changes "$changelog"
   
-#   # Add all changes and commit
-#   git add . > /dev/null 2>&1
-#   git commit -am "chore: ${title} ${message}" > /dev/null 2>&1
+  # Add all changes and commit
+  git add . > /dev/null 2>&1
+  git commit -am "chore: ${title} ${message}" > /dev/null 2>&1
   
-#   # Push to remote - mockable
-#   _mock_command git push origin $branch
+  # Push to remote - mockable
+  _mock_command git push origin $branch
   
-#   # Create tag - capture and discard the output
-#   git_create_tag --version "$version" --tag_message "$title" > /dev/null
+  # Create tag - capture and discard the output
+  git_create_tag --version "$version" --tag_message "$title" > /dev/null
   
-#   echo "Version $version committed"
-# }
+  echo "Version $version committed"
+}
 
 git_create_tag() {
   local args_json=$(parse_arguments "$@")
