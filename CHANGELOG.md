@@ -1,3 +1,8 @@
+## [1.1.10] - 2025-03-24
+
+### 🐛 Bug Fixes
+
+- (1b20f4d) chore: fixing version arg on tag creation
 ## [1.1.9] - 2025-03-24
 
 ### 🚀 Features
