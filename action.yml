@@ -148,6 +148,7 @@ runs:
           git_commit_version_changes \
             --version "${updated_version}" \
             --branch "${{ inputs.target_branch }}" \
+            --title "${{ inputs.version_message }} ${updated_version}" \
             --message "${{ inputs.version_message }} ${updated_version}" \
             --changelog "$changelog"
         fi
