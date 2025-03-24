@@ -173,5 +173,5 @@ runs:
 
         git_create_tag \
           --version "v${updated_version}" \
-          --message "${{ inputs.version_message }} ${updated_version}"
+          --tag-message "${{ inputs.version_message }} ${updated_version}"
       shell: bash

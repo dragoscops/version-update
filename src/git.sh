@@ -418,7 +418,7 @@ git_create_tag() {
   fi
   
   if [ -z "$tag_message" ]; then
-    do_error "No tag message provided. Please specify --tag_message."
+    do_error "No tag message provided. Please specify --tag-message."
   fi
   
   # Create the tag locally
