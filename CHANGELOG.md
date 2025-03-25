@@ -1,3 +1,8 @@
+## [1.1.15] - 2025-03-25
+
+### 🐛 Bug Fixes
+
+- eaf11b2: refresh minor when creating version 1742934385
 ## [1.1.14] - 2025-03-25
 
 ### 🐛 Bug Fixes
