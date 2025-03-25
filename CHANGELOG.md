@@ -1,3 +1,8 @@
+## [1.1.14] - 2025-03-25
+
+### 🐛 Bug Fixes
+
+- 825961b: refresh minor when creating version 1742934174
 ## [1.1.13] - 2025-03-25
 
 ### 🐛 Bug Fixes
