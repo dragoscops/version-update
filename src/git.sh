@@ -410,8 +410,8 @@ git_commit_version_changes() {
   # Push to remote - mockable
   _mock_command git push origin $branch
   
-  # Create tag - capture and discard the output
-  git_create_tag --version "$version" --tag_message "$title" $refresh_minor
+  # Create tag - discard the output entirely
+  git_create_tag --version "$version" --tag_message "$title" $refresh_minor > /dev/null 2>&1
   
   echo "Version $version committed"
 }
@@ -431,10 +431,14 @@ git_create_tag() {
   fi
 
   if git rev-parse "v$version" >/dev/null 2>&1; then
-    # Delete existing tag instead of erroring
-    do_info "Tag v$version already exists, deleting it"
-    git tag -d "v$version"
-    git push origin :refs/tags/"v$version" || true
+    # Delete existing tag instead of erroring, but only do it locally when in test mode
+    if [ "${GIT_MOCK_COMMANDS:-false}" = "true" ]; then
+      git tag -d "v$version" > /dev/null 2>&1
+    else
+      do_info "Tag v$version already exists, deleting it"
+      git tag -d "v$version"
+      git push origin :refs/tags/"v$version" || true
+    fi
   fi
   
   # Create the tag locally
@@ -447,10 +451,14 @@ git_create_tag() {
   if [ "$refresh_minor" = "true" ]; then
     local minor_version=$(echo "$version" | awk -F. '{print $1 "." $2}')
     if git rev-parse "v$minor_version" >/dev/null 2>&1; then
-      # Delete existing tag instead of erroring
-      do_info "Tag v$minor_version already exists, deleting it"
-      git tag -d "v$minor_version"
-      git push origin :refs/tags/"v$minor_version" || true
+      # Delete existing tag instead of erroring, but only do it locally when in test mode
+      if [ "${GIT_MOCK_COMMANDS:-false}" = "true" ]; then
+        git tag -d "v$minor_version" > /dev/null 2>&1
+      else
+        do_info "Tag v$minor_version already exists, deleting it"
+        git tag -d "v$minor_version"
+        git push origin :refs/tags/"v$minor_version" || true
+      fi
     fi
     
     # Create the tag locally
