@@ -375,7 +375,7 @@ git_create_version_branch() {
 }
 
 git_commit_version_changes() {
-  local args_json=$(parse_arguments $@")
+  local args_json=$(parse_arguments "$@")
   local version=$(echo "$args_json" | jq -r '.version // ""')
   local branch=$(echo "$args_json" | jq -r '.branch // ""')
   local title=$(echo "$args_json" | jq -r '.title // ""')
