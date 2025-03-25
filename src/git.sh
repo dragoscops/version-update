@@ -457,6 +457,8 @@ git_create_tag() {
         git push origin :refs/tags/"v$minor_version" || true
       fi
     fi
+
+    git fetch > /dev/null 2>&1
     
     # Create the tag locally
     git tag -a "v$minor_version" -m "$tag_message" > /dev/null 2>&1
