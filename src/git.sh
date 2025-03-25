@@ -409,10 +409,7 @@ git_commit_version_changes() {
   
   # Push to remote - mockable
   _mock_command git push origin $branch
-  
-  # Create tag - discard the output entirely
-  git_create_tag --version "$version" --tag_message "$title" $refresh_minor > /dev/null 2>&1
-  
+
   echo "Version $version committed"
 }
 

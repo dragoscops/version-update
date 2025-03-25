@@ -154,6 +154,11 @@ runs:
             --message "${{ inputs.version_message }} ${updated_version}" \
             --changelog "$changelog" ${{ inputs.refresh_minor && '\
             --refresh-minor' || '' }}
+
+          git_create_tag \
+            --version "${updated_version}" \
+            --tag-message "${{ inputs.version_message }} ${updated_version}" ${{ inputs.refresh_minor && '\
+            --refresh-minor' || '' }}
         fi
       shell: bash
 

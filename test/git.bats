@@ -248,14 +248,9 @@ setup_create_changes() {
   run git log -1 --pretty=%s
   assert_output "chore: Release v2.1.0 Another test release"
   
-  # Check that the tag was created locally
-  run git tag
-  assert_output --partial "v2.1.0"
-  
   # Check that the mock file contains the expected remote operations
   run cat "$GIT_MOCK_OUTPUT"
   assert_output --partial "MOCK: git push origin main"
-  assert_output --partial "MOCK: git push origin v2.1.0"
   
   # Cleanup
   rm -f "$GIT_MOCK_OUTPUT"
