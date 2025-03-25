@@ -1,3 +1,11 @@
+## [1.1.12] - 2025-03-25
+
+### 🔧 Chore
+
+- 4c26046: introduced the refresh minor version option - incomplete 1742933237
+- f19c5c4: introduced the refresh minor version option - incomplete 1742932218
+- 74d338c: introduced the refresh minor version option - incomplete 1742931225
+- a7701bf: introduced the refresh minor version option - incomplete 1742851541
 ## [1.1.11] - 2025-03-24
 
 ### 🐛 Bug Fixes
