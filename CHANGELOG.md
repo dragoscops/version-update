@@ -1,3 +1,8 @@
+## [1.1.18] - 2025-03-25
+
+### 🐛 Bug Fixes
+
+- 7011ece: refresh minor when creating version 1742936314
 ## [1.1.17] - 2025-03-25
 
 ### 🐛 Bug Fixes
