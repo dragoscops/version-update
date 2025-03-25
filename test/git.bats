@@ -335,7 +335,7 @@ setup_create_changes() {
   export GIT_MOCK_OUTPUT="$(mktemp)"
   
   # Run the function with refresh_minor
-  run git_create_tag --version "3.2.5" --tag_message "Tag with minor version" --refresh_minor true
+  run git_create_tag --version "3.2.5" --tag-message "Tag with minor version" --refresh-minor
   
   # Verify the function completed successfully
   assert_success
@@ -370,7 +370,7 @@ setup_create_changes() {
   export GIT_MOCK_OUTPUT="$(mktemp)"
   
   # Run the function to recreate both tags
-  run git_create_tag --version "5.3.1" --tag_message "Updated tag 5.3.1" --refresh_minor true
+  run git_create_tag --version "5.3.1" --tag-message "Updated tag 5.3.1" --refresh_minor true
   
   # Verify the function completed successfully
   assert_success

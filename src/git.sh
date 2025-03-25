@@ -381,6 +381,7 @@ git_commit_version_changes() {
   local title=$(echo "$args_json" | jq -r '.title // ""')
   local message=$(echo "$args_json" | jq -r '.message // ""')
   local changelog=$(echo "$args_json" | jq -r '.changelog // ""')
+  local refresh_minor=$(echo "$args_json" | jq -r '.refresh_minor // "false"')
   
   if [ -z "$version" ]; then
     do_error "No version provided. Please specify --version."
@@ -394,6 +395,12 @@ git_commit_version_changes() {
     do_error "No branch provided. Please specify --branch"
   fi
 
+  if [ "$refresh_minor" == "true" ]; then
+    refresh_minor=--refresh-minor
+  else
+    refresh_minor=""
+  fi
+
   git_write_changelog --version "$version" --changes "$changelog"
   
   # Add all changes and commit
@@ -404,7 +411,7 @@ git_commit_version_changes() {
   _mock_command git push origin $branch
   
   # Create tag - capture and discard the output
-  git_create_tag --version "$version" --tag_message "$title" > /dev/null
+  git_create_tag --version "$version" --tag_message "$title" $refresh_minor
   
   echo "Version $version committed"
 }

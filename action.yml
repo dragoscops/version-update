@@ -150,7 +150,8 @@ runs:
             --branch "${{ inputs.target_branch }}" \
             --title "${{ inputs.version_message }} ${updated_version}" \
             --message "${{ inputs.version_message }} ${updated_version}" \
-            --changelog "$changelog"
+            --changelog "$changelog" ${{ inputs.refresh_minor && '\
+            --refresh-minor' || '' }}
         fi
       shell: bash
 
@@ -177,7 +178,8 @@ runs:
 
         git_create_tag \
           --version "${updated_version}" \
-          --tag-message "${{ inputs.version_message }} ${updated_version}"
+          --tag-message "${{ inputs.version_message }} ${updated_version}" ${{ inputs.refresh_minor && '\
+            --refresh-minor' || '' }}
     
         echo "tag=${commit_message}"
         echo "tag<<EOF" >> $GITHUB_OUTPUT
