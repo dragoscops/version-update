@@ -1,3 +1,8 @@
+## [1.1.13] - 2025-03-25
+
+### 🐛 Bug Fixes
+
+- f2c40ec: refresh minor when creating version 1742933737
 ## [1.1.12] - 2025-03-25
 
 ### 🔧 Chore
