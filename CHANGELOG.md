@@ -1,3 +1,11 @@
+## [1.1.17] - 2025-03-25
+
+### 🐛 Bug Fixes
+
+- 99e9cfd: refresh minor when creating version 1742935708
+### 🔧 Chore
+
+- f2c3a96: version pull request 1.1.16 version pull request 1.1.16
 ## [1.1.16] - 2025-03-25
 
 ### 🐛 Bug Fixes
