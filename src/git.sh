@@ -452,13 +452,12 @@ git_create_tag() {
       if [ "${GIT_MOCK_COMMANDS:-false}" = "true" ]; then
         git tag -d "v$minor_version" > /dev/null 2>&1
       else
-        do_info "Tag v$minor_version already exists, deleting it"
+        # do_info "Tag v$minor_version already exists, deleting it"
         git tag -d "v$minor_version"
         git push origin :refs/tags/"v$minor_version" || true
+        git fetch > /dev/null 2>&1
       fi
     fi
-
-    git fetch > /dev/null 2>&1
     
     # Create the tag locally
     git tag -a "v$minor_version" -m "$tag_message" > /dev/null 2>&1
