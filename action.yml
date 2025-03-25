@@ -129,9 +129,9 @@ runs:
           awk -F';' '{print $1}' | 
           awk -F':' '{ print $NF }')
     
-        echo "tag=${commit_message}"
+        echo "tag=v${updated_version}"
         echo "tag<<EOF" >> $GITHUB_OUTPUT
-        echo "${tag}" >> $GITHUB_OUTPUT
+        echo "v${updated_version}" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
 
         changelog=$(git_build_changelog \
@@ -181,8 +181,8 @@ runs:
           --tag-message "${{ inputs.version_message }} ${updated_version}" ${{ inputs.refresh_minor && '\
           --refresh-minor' || '' }}
     
-        echo "tag=${commit_message}"
+        echo "tag=v${updated_version}"
         echo "tag<<EOF" >> $GITHUB_OUTPUT
-        echo "v${tag}" >> $GITHUB_OUTPUT
+        echo "v${updated_version}" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
       shell: bash
