@@ -94,6 +94,7 @@ Each workspace can specify its type to determine how version detection and updat
 | `version_message`  | Version pull request message.                                  | No       | `version pull request`|
 | `no_pr`            | Set to any value to commit directly without creating a PR.     | No       | N/A                  |
 | `target_branch`    | Branch to save the version changes to (PR or direct commit).   | No       | `main`               |
+| `refresh_minor`    | When set, also creates/updates tags for minor versions (e.g., v1.2 for v1.2.3). | No | N/A |
 
 ---
 
@@ -229,6 +230,15 @@ Specify a different target branch for pull requests or direct commits.
 ```yaml
 with:
   target_branch: "develop"
+```
+
+### Minor Version Tags
+
+Enable creation of minor version tags in addition to full version tags.
+
+```yaml
+with:
+  refresh_minor: "true"
 ```
 
 ---

@@ -58,6 +58,7 @@ jobs:
           github_token: ${{ secrets.GH_TOKEN }}
           target_branch: ${{ github.ref }}
           no_pr: true
+          refresh_minor: true
       - name: Output Results
         run: |
           echo "Version Tag: ${{ steps.version_step.outputs.tag }}"
