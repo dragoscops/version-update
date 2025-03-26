@@ -77,8 +77,8 @@ runs:
       run: |
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
-        source ${{ github.workspace }}/src/git.sh
         source ${{ github.workspace }}/src/gitbub.sh
+        source ${{ github.workspace }}/src/git.sh
         source ${{ github.workspace }}/src/version.sh
 
         source ${{ github.workspace }}/src/package_version_detect.sh
@@ -121,8 +121,8 @@ runs:
       run: |
         source ${{ github.workspace }}/src/logging.sh
         source ${{ github.workspace }}/src/utils.sh
-        source ${{ github.workspace }}/src/git.sh
         source ${{ github.workspace }}/src/gitbub.sh
+        source ${{ github.workspace }}/src/git.sh
 
         source ${{ github.workspace }}/src/package_version_detect.sh
         source ${{ github.workspace }}/src/package_version_update.sh
