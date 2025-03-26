@@ -13,341 +13,183 @@ inputs:
     description: Version pull request message
   no_pr:
     description: Use pull request to increase the version
-  dry_run:
-    description: Do nothing. Will just print commands to run
+  target_branch:
+    description: Branch to save the version changes to (pull request or direct commit)
+    default: main
 
 outputs:
-  version_branch:
-    description: Name of the version branch
-    value: "${{ steps.version_branch.outputs.version_branch }}"
-  pr_title:
-    description: Title of the version pull request
-    value: "${{ steps.version_branch.outputs.pr_title }}"
   tag:
     description: Tag to have been pushed
-    value: "${{ steps.tag_info.outputs.tag }}"
-  # status:
-  #   dexscription: Status of the version increase
-  #   value: "${{ steps. }}"
+    value: "${{ steps.push_new_version.outputs.tag || steps.git_create_tag.outputs.tag || '' }}"
+  status:
+    description: Status of the version increase
+    value: "${{ (steps.push_new_version.outcome == 'success' || steps.git_create_tag.outcome == 'success') && 'success' || 'failed' }}"
 
 runs:
   using: "composite"
   steps:
-    - name: Commit Info
-      id: git_info
-      if: ${{ github.event_name == 'push' }}
-      shell: bash
+    # Gathering Generic Data
+    #
+
+    - name: Git Prerequisites
+      id: git_prerequisites
       run: |
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/git.sh
+        
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_name_detect.sh
+        source ${{ github.workspace }}/src/project.sh
+
         git_get_commit_message --store
-        # git_get_pr_message --store
-        get_get_last_tag --store
+        git_get_last_created_tag --store
+        gather_workspaces_info --workspaces "${{ inputs.workspaces }}" --store
+      shell: bash
 
-    - name: Determine Changed Packages
-      id: workspaces_info
+    # Gathering Version Increase Data
+    #
+
+    - name: Workspace Prerequisites
+      id: ws_prerequisites
       if: ${{ github.event_name == 'push' }}
-      shell: bash
       run: |
-        source ${{ github.workspace }}/action_lib.sh
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_name_detect.sh
+        source ${{ github.workspace }}/src/project.sh
 
-        # split workspaces into a string array
-        workspaces_string="${{ inputs.workspaces }}"
-        IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
-        main_workspace=
+        gather_changed_workspaces_info \
+          --workspaces "${{ inputs.workspaces }}" \
+          --tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
+          --store
+      shell: bash
 
-        # split version files into a string array
-        version_files_string="${{ inputs.version_files }}"
-        IFS=',' read -r -a version_files_array <<< "$version_files_string"
-        main_version_file=
+    # Increasing Version
+    #
 
-        # if there are more than one workspaces, ignore 1st (1st one is the project)
-        if [[ ${#workspaces_array[@]} -gt 1 ]]; then
-          main_workspace=${workspaces_array[0]}
-          main_version_file=${version_files_array[0]}
-          workspaces_array=("${workspaces_array[@]:1}")
-          version_files_array=("${version_files_array[@]:1}")
-          workspaces_array+=($main_workspace)
-          version_files_array+=($main_version_file)
-        fi
-
-        packages='[]'
-
-        for ((i=0; i<${#workspaces_array[@]}; i++)); do
-          workspace=${workspaces_array[$i]}
-          version_file=${version_files_array[$i]}
-          echo "::group::testing workspace '$workspace' for changes"
-
-          changed_files=$(git diff --name-only "${{ steps.git_info.outputs.last_tag }}" HEAD -- "$workspace")
-          changed=0
-          if [[ -n "$changed_files" ]]; then
-            changed=1
-          fi
-
-          cd $workspace
-          if [[ ! -f $version_file ]]; then
-            echo "::error::Missing ${version_file} version file in workspace ${workspace}"
-            exit 1
-          fi
-          version=$(read_version "$version_file")
-          cd ${{ github.workspace }}
-
-          packages=$(echo "$packages" | jq --arg pt "$workspace" --arg v "$version" \
-            --arg vf "$version_file" --argjson ch "$changed" \
-            '. += [{"path": $pt, "version_file": $vf, "version": $v, "changed": $ch}]')
-
-          echo "::endgroup::"
-        done
-
-        packages_json=$(echo "$packages" | jq -c '.')
-
-        echo "packages=$(echo $packages_json | jq -r '.')"
-        echo "packages=${packages_json}" >> $GITHUB_OUTPUT
-
-    - name: Version Info
-      id: version_info
+    - name: Increase Version and Commit the Changes
+      id: version_increase
       if: ${{ github.event_name == 'push' }}
-      shell: bash
       run: |
-        commit_message="${{ steps.git_info.outputs.commit_message }}"
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/git.sh
+        source ${{ github.workspace }}/src/version.sh
 
-        increment=""
-        if [[ "$commit_message" == "feat!:"* || "$commit_message" == "feature!:"* || "$commit_message" == *"BREAKING CHANGE"* ]]; then
-          increment="major"
-        elif [[ "$commit_message" == "feat:"* || "$commit_message" == "feature:"* ]]; then
-          increment="minor"
-        elif [[ "$commit_message" == "fix:"* ]]; then
-          increment="patch"
-        fi
-        echo "increment=${increment}"
-        echo "increment=${increment}" >> $GITHUB_OUTPUT
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_version_update.sh
+        source ${{ github.workspace }}/src/project.sh
 
-        pre_release_id=""
-        if [[ "$commit_message" == "(rc"* || "$commit_message" == "(release-candidate"* ]]; then
-          pre_release_id=$(echo "$commit_message" | grep -oP '\((rc|release-candidate)(?::\K[^)]*|)\)' | sed 's/^$/rc/')
-        fi
-        echo "pre_release_id=${pre_release_id}"
-        echo "pre_release_id=${pre_release_id}" >> $GITHUB_OUTPUT
-
-    - name: Increase Versions
-      if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.workspaces_info.outputs.packages != '[]' }}
+        increase_workspaces_versions \
+          --workspaces-info "${{ steps.ws_prerequisites.outputs.changed_workspaces_info }}" \
+          --commit-message "${{ steps.git_prerequisites.outputs.commit_message }}" \
+          --tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
+          --store
       shell: bash
-      run: |
-        source ${{ github.workspace }}/action_lib.sh
 
-        ws_regex='^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$'
-        # loop over all packages
-        echo '${{ steps.workspaces_info.outputs.packages }}' | jq -c '.[]' | while read ws; do
-          # if package is empty, continue
-          if [[ -z "$ws" ]]; then continue; fi
-          # if package is not changed, continue
-          ws_changed=$(echo "$ws" | jq -r '.changed // 0')
-          if [[ $ws_changed -eq 0 ]]; then continue; fi
-
-          # extract variables
-          ws_path=$(echo "$ws" | jq -r '.path')
-          ws_version_file=$(echo "$ws" | jq -r '.version_file')
-          ws_version=$(echo "$ws" | jq -r '.version')
-
-          echo "::group::Increasing version for workspace $ws_path $ws_version_file $ws_version"
-
-          # extract version chunks according to semver.org
-          read -r ws_version_major ws_version_minor ws_version_patch ws_version_prerelease ws_version_build <<< $(
-            echo "$ws_version" | awk '
-              BEGIN {
-                # Corrected character class: hyphen at the beginning to avoid range issues
-                FS = "[-.+]"
-                OFS = " "
-              }
-              {
-                # Use a robust regex to match semantic versioning
-                match($0, /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z.+-]+))?(?:\+([0-9A-Za-z.+-]+))?$/, arr)
-
-                # Assign captured groups to variables
-                major = arr[1]
-                minor = arr[2]
-                patch = arr[3]
-                prerelease = arr[4]
-                build = arr[5]
-
-                # Print the components separated by spaces
-                print major, minor, patch, prerelease, build
-              }'
-          )
-
-          if [[ -z "$ws_version_major" ]]; then
-            echo "Invalid semantic version: $version" >&2
-            exit 1
-          fi
-
-          # increase version chunks according to conventionalcommits.org
-          case "${{ steps.version_info.outputs.increment }}" in
-            major) ws_version_major=$((ws_version_major + 1));;
-            minor) ws_version_minor=$((ws_version_minor + 1));;
-            patch) ws_version_patch=$((ws_version_patch + 1));;
-            *) echo "Invalid increment."; exit 1;;
-          esac
-
-          # prepare pre-release id if required
-          if [[ -n "${{ steps.version_info.outputs.pre_release_id }}" ]]; then
-            version_prerelease="${{ steps.version_info.outputs.pre_release_id }}"
-            ws_version_build=${ws_version_build:-0}
-            if [[ "$ws_version_prerelease" != "$version_prerelease" ]]; then
-              ws_version_prerelease=$version_prerelease
-              ws_version_build=0
-            fi
-            ws_version_build=$((ws_version_build + 1))
-          else
-            ws_version_prerelease=""
-          fi
-
-          # compose increased version
-          version="$ws_version_major.$ws_version_minor.$ws_version_patch"
-          if [[ -n "$ws_version_prerelease" ]]; then
-            version="$version-$ws_version_prerelease.$ws_version_build"
-          fi
-
-          cd $ws_path
-
-          write_version "$ws_version_file" "$version"
-          echo "$ws_path workspace version increased to $version"
-          cd ${{ github.workspace }}
-          echo '::endgroup::'
-        done
-
-    # TODO: add a step to build changelogs per workspace
-
-    - name: Build Versions List
-      if: ${{ github.event_name == 'push' }}
-      id: versions_info
-      shell: bash
-      run: |
-        source ${{ github.workspace }}/action_lib.sh
-
-        workspaces_string="${{ inputs.workspaces }}"
-        IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
-
-        version_files_string="${{ inputs.version_files }}"
-        IFS=',' read -r -a version_files_array <<< "$version_files_string"
-
-        versions_array=()
-
-        for ((i=0; i<${#workspaces_array[@]}; i++)); do
-          workspace=${workspaces_array[$i]}
-          version_file=${version_files_array[$i]}
-          cd $workspace
-
-          version=$(read_version "$version_file")
-          versions_array+=($version)
-
-          cd ${{ github.workspace }}
-        done
-
-        IFS=',' versions_string="${versions_array[*]}"
-        echo "versions=$versions_string"
-        echo "versions=$versions_string" >> $GITHUB_OUTPUT
-
-    - name: Prepare Tag
-      id: tag_info
-      if: ${{ github.event_name == 'push' && steps.versions_info.outputs.versions }}
-      shell: bash
-      run: |
-        source ${{ github.workspace }}/action_lib.sh
-
-        workspaces_string="${{ inputs.workspaces }}"
-        IFS=',' read -r -a workspaces_array <<< "$workspaces_string"
-
-        version_files_string="${{ inputs.version_files }}"
-        IFS=',' read -r -a version_files_array <<< "$version_files_string"
-
-        versions_string='${{ steps.versions_info.outputs.versions }}'
-        IFS=',' read -r -a versions_array <<< "$versions_string"
-
-        tag="v${versions_array[0]}"
-
-        if [[ ${#versions_array[@]} -gt 1 ]]; then
-          workspaces_array=("${workspaces_array[@]:1}")
-          version_files_array=("${version_files_array[@]:1}")
-          versions_array=("${versions_array[@]:1}")
-
-          for (( i=0; i<${#versions_array[@]}; i++ )); do
-            workspace=${workspaces_array[$i]}
-            version_file=${version_files_array[$i]}
-            cd $workspace
-            workspace_name=$(read_name "$version_file" "$workspace")
-            tag="${tag}_${workspace_name}${versions_array[$i]}"
-
-            cd ${{ github.workspace }}
-          done
-        fi
-
-        tag=$(echo $tag | sed -e 's/[^a-zA-Z0-9]/_/g')
-        echo "tag=$tag"
-        echo "tag=$tag" >> $GITHUB_OUTPUT
-
-    - name: Set up Git
-      if: ${{ github.event_name == 'push' }}
-      shell: bash
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git config --global --add safe.directory "$GITHUB_WORKSPACE"
-        git remote set-url origin https://x-access-token:${{ inputs.github_token }}@github.com/${{ github.repository }}.git
-
-        pwd
-        ls -la .
-        git remote show origin
-
-    - name: Create Version Branch
+    - name: Set up Git with Authentication
       env:
         GH_TOKEN: ${{ inputs.github_token }}
-      id: version_branch
-      if: ${{ github.event_name == 'push' && steps.version_info.outputs.increment && steps.versions_info.outputs.versions && ! inputs.no_pr }}
-      shell: bash
+      if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
       run: |
-        tag="${{ steps.tag_info.outputs.tag }}"
-        version_branch="version_${tag}"
-        echo "version_branch=${version_branch}" >> $GITHUB_OUTPUT
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/git.sh
 
-        # Check if there are changes before creating a branch and committing
-        if [[ -n "$(git status --porcelain)" ]]; then
-          git checkout -b $version_branch
-          git add .
-          git commit -am "chore: ${{ inputs.version_message }} ${{ steps.tag_info.outputs.tag }}"
-          git push origin $version_branch
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_version_update.sh
+        source ${{ github.workspace }}/src/project.sh
 
-          pr_title="${{ inputs.version_message }} ${{ steps.tag_info.outputs.tag }}"
-          echo "pr_title=${pr_title}" >> $GITHUB_OUTPUT
-          gh pr create --base main --head "$version_branch" --title "$pr_title" --body "New Version Proposed"
+        git_setup_user
 
-          echo "version_pr=1" >> $GITHUB_OUTPUT
+        update_workspaces_versions --workspaces-info "${{ steps.version_increase.outputs.updated_workspaces_info }}"
+        
+        # Configure git with authentication token
+        git config --global url."https://x-access-token:${{ inputs.github_token }}@github.com/".insteadOf "https://github.com/"
+      shell: bash
+
+    - name: Push new Version via Pull Request or Direct Commit
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      id: push_new_version
+      if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
+      run: |
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/git.sh
+
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_version_update.sh
+        source ${{ github.workspace }}/src/project.sh
+
+        set -ex
+
+        updated_version=$(echo "${{ steps.version_increase.outputs.updated_workspaces_info }}" | 
+          awk -F';' '{print $1}' | 
+          awk -F':' '{ print $NF }')
+    
+        echo "tag=v${updated_version}"
+        echo "tag<<EOF" >> $GITHUB_OUTPUT
+        echo "v${updated_version}" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+        changelog=$(git_build_changelog \
+          --last-tag "${{ steps.git_prerequisites.outputs.last_tag }}" \
+          --format markdown --group-by-type)
+
+        if [[ -z "${{ inputs.no_pr }}" ]]; then
+          git_create_version_branch \
+            --version "${updated_version}" \
+            --merge-branch "${{ inputs.target_branch }}" \
+            --pr-title "${{ inputs.version_message }} ${updated_version}" \
+            --pr-message "$changelog"
         else
-          echo "::warning::No changes to commit. Skipping branch creation."
+          git_commit_version_changes \
+            --version "${updated_version}" \
+            --branch "${{ inputs.target_branch }}" \
+            --title "${{ inputs.version_message }} ${updated_version}" \
+            --message "${{ inputs.version_message }} ${updated_version}" \
+            --changelog "$changelog" ${{ inputs.refresh_minor && '\
+            --refresh-minor' || '' }}
+
+          git_create_tag \
+            --version "${updated_version}" \
+            --tag-message "${{ inputs.version_message }} ${updated_version}" ${{ inputs.refresh_minor && '\
+            --refresh-minor' || '' }}
         fi
-
-    - name: Commit Version
-      id: version_commit
-      if: ${{ steps.versions_info.outputs.versions && inputs.no_pr }}
       shell: bash
+
+    # Create Git Tag
+    #
+
+    - name: Create Git Tag
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      id: git_create_tag
+      if: ${{ github.event_name == 'push' && contains(steps.git_prerequisites.outputs.commit_message, inputs.version_message) }}
       run: |
-        git add .
-        git commit -am "chore: ${{ inputs.version_message }} ${{ steps.version_info.outputs.versions }}
+        source ${{ github.workspace }}/src/logging.sh
+        source ${{ github.workspace }}/src/utils.sh
+        source ${{ github.workspace }}/src/git.sh
 
-        echo "version_commit=1" >> $GITHUB_OUTPUT
+        source ${{ github.workspace }}/src/package_version_detect.sh
+        source ${{ github.workspace }}/src/package_version_update.sh
+        source ${{ github.workspace }}/src/project.sh
 
-    - name: Create Tag
-      id: tag_create_info
-      if: ${{ github.event_name == 'push' && ( steps.version_commit.outputs.version_commit || contains(steps.git_info.outputs.commit_message, inputs.version_message) ) }}
+        git_setup_user
+
+        updated_version=$(echo "${{ steps.git_prerequisites.outputs.workspaces_info }}" | awk -F';' '{print $1}' | awk -F':' '{ print $NF }')
+
+        git_create_tag \
+          --version "${updated_version}" \
+          --tag-message "${{ inputs.version_message }} ${updated_version}" ${{ inputs.refresh_minor && '\
+          --refresh-minor' || '' }}
+    
+        echo "tag=v${updated_version}"
+        echo "tag<<EOF" >> $GITHUB_OUTPUT
+        echo "v${updated_version}" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
       shell: bash
-      run: |
-        echo "${{ steps.git_info.outputs.commit_message }}"
-
-        tag="${{ steps.tag_info.outputs.tag }}"
-        git fetch --all --tags
-
-        # Ensure the tag doesn't already exist
-        if git rev-parse "$tag" >/dev/null 2>&1; then
-          echo "::error::Tag $tag already exists. Skipping tag creation."
-          exit 1
-        else
-          git tag "$tag"
-          git push origin "$tag"
-        fi

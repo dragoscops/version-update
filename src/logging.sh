@@ -17,7 +17,7 @@ do_log() {
   local _message="$2"
 
   echo "::$_type:$_message"
-  [ "$_type" == "error" ] && exit 1
+  [ "$_type" = "error" ] && exit 1
 }
 
 ###########################################

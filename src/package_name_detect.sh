@@ -127,9 +127,7 @@ rust_detect_name() {
     do_error "Cargo.toml not found"
   fi
 
-  if ! command -v yq > /dev/null; then
-    do_error "'yq' application is missing"
-  fi
+  fail_at_missing_command yq
 
   yq e '.package.name' Cargo.toml
 }
