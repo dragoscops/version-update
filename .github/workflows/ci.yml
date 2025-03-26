@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - rewrite
 
 # Add permissions block for proper repository access
 permissions:
