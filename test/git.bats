@@ -7,6 +7,7 @@ source "./src/logging.sh"
 source "./src/utils.sh"
 source "./src/package_version_detect.sh"
 source "./src/package_version_update.sh"
+source "./src/github.sh"
 source "./src/git.sh"
 
 source "./test/helpers.sh"
@@ -55,6 +56,7 @@ setup() {
   run git_get_commit_message --store
   
   assert_success
+  # The output now comes from github_output_store function
   assert_output "commit_message=feat: new feature added"
   
   # Check if value was stored in GITHUB_OUTPUT
@@ -100,11 +102,14 @@ setup_create_tag() {
   run git_get_last_created_tag --store
   
   assert_success
+  # The output now comes from github_output_store function
   assert_output "last_tag=v1.0.0"
   
+  # Check if value was stored in GITHUB_OUTPUT
   run cat "$GITHUB_OUTPUT"
-  assert_output --partial "last_tag=v1.0.0"
-
+  assert_output --partial "last_tag<<EOF"
+  assert_output --partial "v1.0.0"
+  assert_output --partial "EOF"
   unset GITHUB_OUTPUT
 }
 
@@ -181,6 +186,7 @@ setup_create_changes() {
   run git_build_changelog --last_tag v0.1.0 --store
   
   assert_success
+  # The output now comes from github_output_store function
   assert_output --partial "changelog="
   
   # Check if value was stored in GITHUB_OUTPUT

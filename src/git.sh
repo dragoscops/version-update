@@ -17,10 +17,7 @@ git_get_commit_message() {
   
   commit_message=$(git log -1 --no-merges --pretty=format:%B)
   if [ "$store" = "true" ]; then
-    echo "commit_message=${commit_message}"
-    echo "commit_message<<EOF" >> $GITHUB_OUTPUT
-    echo "${commit_message}" >> $GITHUB_OUTPUT
-    echo "EOF" >> $GITHUB_OUTPUT
+    github_output_store "commit_message" "${commit_message}"
   else 
     echo "${commit_message}"
   fi
@@ -35,8 +32,7 @@ git_get_last_created_tag() {
     last_tag=$(git rev-list --max-parents=0 HEAD)
   fi
   if [ "$store" = "true" ]; then
-    echo "last_tag=${last_tag}"
-    echo "last_tag=${last_tag}" >> $GITHUB_OUTPUT
+    github_output_store "last_tag" "${last_tag}"
   else
     echo "${last_tag}"
   fi
@@ -69,10 +65,7 @@ git_build_changelog() {
   # If no commits found, exit early with empty changelog
   if [ -z "$changelog" ]; then
     if [ "$store" = "true" ]; then
-      echo "changelog="
-      echo "changelog<<EOF" >> $GITHUB_OUTPUT
-      echo "" >> $GITHUB_OUTPUT
-      echo "EOF" >> $GITHUB_OUTPUT
+      github_output_store "changelog" ""
     else
       echo ""
     fi
@@ -280,10 +273,7 @@ $other
   
   # Store or output the changelog
   if [ "$store" = "true" ]; then
-    echo "changelog=${changelog}"
-    echo "changelog<<EOF" >> $GITHUB_OUTPUT
-    echo "${changelog}" >> $GITHUB_OUTPUT
-    echo "EOF" >> $GITHUB_OUTPUT
+    github_output_store "changelog" "${changelog}"
   else
     echo "${changelog}"
   fi

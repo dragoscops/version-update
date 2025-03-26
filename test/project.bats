@@ -7,6 +7,7 @@ source "./src/utils.sh"
 source "./src/logging.sh"
 source "./src/version.sh"
 source "./src/git.sh"
+source "./src/github.sh"
 
 source "./src/package_name_detect.sh"
 source "./src/package_version_detect.sh"
@@ -67,7 +68,6 @@ setup() {
   cd $TEST_REPO
   export GITHUB_OUTPUT="$(mktemp)"
   
-
   # Run gather_workspaces_info with --store parameter
   run gather_workspaces_info --store
 

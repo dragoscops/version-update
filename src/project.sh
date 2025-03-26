@@ -29,10 +29,7 @@ gather_workspaces_info() {
   cd "$main_workspace_path"
   
   if [ "$store" == "true" ]; then
-    echo "workspaces_info=${workspaces_info}"
-    echo "workspaces_info<<EOF" >> "$GITHUB_OUTPUT"
-    echo "$workspaces_info" >> "$GITHUB_OUTPUT"
-    echo "EOF" >> "$GITHUB_OUTPUT"
+    github_output_store "workspaces_info" "${workspaces_info}"
   else
     echo "$workspaces_info"
   fi
@@ -97,10 +94,7 @@ gather_changed_workspaces_info() {
   fi
   
   if [ "$store" == "true" ]; then
-    echo "changed_workspaces_info=${changed_workspaces_info}"
-    echo "changed_workspaces_info<<EOF" >> "$GITHUB_OUTPUT"
-    echo "$changed_workspaces_info" >> "$GITHUB_OUTPUT"
-    echo "EOF" >> "$GITHUB_OUTPUT"
+    github_output_store "changed_workspaces_info" "${changed_workspaces_info}"
   else
     echo "$changed_workspaces_info"
   fi
@@ -173,10 +167,7 @@ increase_workspaces_versions() {
   done
 
   if [ "$store" = "true" ] || [ "$store" = true ]; then
-    echo "updated_workspaces_info=${updated_workspaces_info}"
-    echo "updated_workspaces_info<<EOF" >> "$GITHUB_OUTPUT"
-    echo "$updated_workspaces_info" >> "$GITHUB_OUTPUT"
-    echo "EOF" >> "$GITHUB_OUTPUT"
+    github_output_store "updated_workspaces_info" "${updated_workspaces_info}"
   else
     echo "$updated_workspaces_info"
   fi
