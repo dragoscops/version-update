@@ -74,6 +74,27 @@ Each workspace can specify its type to determine how version detection and updat
 - Commit messages following [Conventional Commits](https://www.conventionalcommits.org/) to determine version increments.
 - GitHub token with appropriate permissions to push commits and create pull requests.
 
+#### Required Dependencies
+
+The action relies on several dependencies that should be available in the GitHub Actions runner environment:
+
+**Core Dependencies:**
+- `bash` - For executing the scripts
+- `git` - For version control operations
+- `jq` - For JSON parsing
+- `yq` - For YAML parsing
+
+**Language-specific Dependencies:**
+These are only needed if you're using the corresponding workspace types:
+
+- **Node.js/JavaScript:** Node.js runtime
+- **Deno:** Deno runtime
+- **Python:** Python 3.x
+- **Go:** Go 1.17+
+- **Rust:** Cargo and cargo-set-version
+
+Most GitHub Actions runners have these dependencies pre-installed, except for `yq` and language-specific tools which you may need to install in your workflow.
+
 ### Basic Workflow
 
 1. **Push Changes:** When you push changes to the repository, the action triggers.
@@ -90,7 +111,7 @@ Each workspace can specify its type to determine how version detection and updat
 | Input              | Description                                                    | Required | Default              |
 |--------------------|----------------------------------------------------------------|----------|----------------------|
 | `github_token`     | **Required.** GitHub Token for performing Git operations.      | Yes      | N/A                  |
-| `workspaces`       | Paths to the workspaces within the repository, with type designation (e.g., ".:text"). Separated by commas. | No | `.:text` |
+| `workspaces`       | Paths to the workspaces within the repository, with type designation (e.g., `.:text`). Separated by columns (e.g. `.:text;ci/eslint:node`). | No | `.:text` |
 | `version_message`  | Version pull request message.                                  | No       | `version pull request`|
 | `no_pr`            | Set to any value to commit directly without creating a PR.     | No       | N/A                  |
 | `target_branch`    | Branch to save the version changes to (PR or direct commit).   | No       | `main`               |
@@ -130,7 +151,7 @@ jobs:
           fetch-depth: 0  # Important for git history
 
       - name: Version Update
-        uses: dragoscops/version-update@v1
+        uses: dragoscops/version-update@v1.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -156,11 +177,10 @@ jobs:
           fetch-depth: 0  # Important for git history
 
       - name: Version Update
-        uses: dragoscops/version-update@v1
+        uses: dragoscops/version-update@v1.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          workspaces: ".:text;packages/frontend:javascript,packages/backend:python"
-          version_message: "chore: update versions"
+          workspaces: ".:text;packages/frontend:node,packages/backend:python"
 ```
 
 ### Direct Commit Without PR
@@ -184,7 +204,7 @@ jobs:
           fetch-depth: 0  # Important for git history
 
       - name: Version Update
-        uses: dragoscops/version-update@v1
+        uses: dragoscops/version-update@v1.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           no_pr: "true"
@@ -203,7 +223,19 @@ with:
   workspaces: "workspace1:type1,workspace2:type2,workspace3:type3"
 ```
 
-> **Important:** In a monorepo setup, the first workspace listed becomes the main workspace if you don't explicitly set the root directory (.:type). The main workspace's version is used for tag creation. In the example above, `workspace1:type1` will determine the version used for Git tags.
+The supported workspace types and their associated version files are:
+
+| Type | Description | Version Files |
+|------|-------------|--------------|
+| `node` | Node.js/JavaScript projects | `package.json`, `jsr.json` |
+| `deno` | Deno projects | `deno.json`, `deno.jsonc`, `jsr.json`, `package.json` |
+| `python` | Python projects | `pyproject.toml`, `setup.cfg`, `setup.py` |
+| `go` | Go projects | `go.mod` |
+| `rust` | Rust projects | `Cargo.toml` |
+| `text` | Generic text-based version | `version`, `VERSION`, `version.txt`, `VERSION.txt` |
+
+> [!IMPORTANT]
+> In a monorepo setup, the first workspace listed becomes the main workspace if you don't explicitly set the root directory (.:type). The main workspace's version is used for tag creation. In the example above, `workspace1:type1` will determine the version used for Git tags.
 
 ### Version Message
 
