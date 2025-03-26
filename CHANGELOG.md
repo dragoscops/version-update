@@ -1,3 +1,8 @@
+## [1.1.21] - 2025-03-26
+
+### 🐛 Bug Fixes
+
+- 9c8df96: increase version without pr
 ## [1.1.20] - 2025-03-26
 
 ### 🐛 Bug Fixes
