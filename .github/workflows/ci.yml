@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 # Add permissions block for proper repository access
 permissions:
@@ -50,15 +53,20 @@ jobs:
       - name: Run Tests
         run: |
           task test
+      
+      # Only run version increase on push to main, not on pull requests
       - name: Increase Version
         id: version_step
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./
         with:
           github_token: ${{ secrets.GH_TOKEN }}
           target_branch: ${{ github.ref }}
           # no_pr: true
           refresh_minor: true
+
       - name: Output Results
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           echo "Version Tag: ${{ steps.version_step.outputs.tag }}"
           echo "Status: ${{ steps.version_step.outputs.status }}"
