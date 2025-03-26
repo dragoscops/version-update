@@ -57,7 +57,7 @@ jobs:
         with:
           github_token: ${{ secrets.GH_TOKEN }}
           target_branch: ${{ github.ref }}
-          no_pr: true
+          # no_pr: true
           refresh_minor: true
       - name: Output Results
         run: |
