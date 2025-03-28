@@ -1,3 +1,8 @@
+## [1.1.22] - 2025-03-28
+
+### 🔧 Chore
+
+- 059de3d: using github.workspace for paths is wrong
 ## [1.1.21] - 2025-03-26
 
 ### 🐛 Bug Fixes
