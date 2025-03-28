@@ -34,14 +34,14 @@ runs:
     - name: Git Prerequisites
       id: git_prerequisites
       run: |
-        source ./src/logging.sh
-        source ./src/utils.sh
-        source ./src/github.sh
-        source ./src/git.sh
+        source $GITHUB_ACTION_PATH/src/logging.sh
+        source $GITHUB_ACTION_PATH/src/utils.sh
+        source $GITHUB_ACTION_PATH/src/github.sh
+        source $GITHUB_ACTION_PATH/src/git.sh
 
-        source ./src/package_version_detect.sh
-        source ./src/package_name_detect.sh
-        source ./src/project.sh
+        source $GITHUB_ACTION_PATH/src/package_version_detect.sh
+        source $GITHUB_ACTION_PATH/src/package_name_detect.sh
+        source $GITHUB_ACTION_PATH/src/project.sh
 
         git_get_commit_message --store
         git_get_last_created_tag --store
@@ -55,13 +55,13 @@ runs:
       id: ws_prerequisites
       if: ${{ github.event_name == 'push' }}
       run: |
-        source ./src/logging.sh
-        source ./src/utils.sh
-        source ./src/github.sh
+        source $GITHUB_ACTION_PATH/src/logging.sh
+        source $GITHUB_ACTION_PATH/src/utils.sh
+        source $GITHUB_ACTION_PATH/src/github.sh
 
-        source ./src/package_version_detect.sh
-        source ./src/package_name_detect.sh
-        source ./src/project.sh
+        source $GITHUB_ACTION_PATH/src/package_version_detect.sh
+        source $GITHUB_ACTION_PATH/src/package_name_detect.sh
+        source $GITHUB_ACTION_PATH/src/project.sh
 
         gather_changed_workspaces_info \
           --workspaces "${{ inputs.workspaces }}" \
@@ -76,15 +76,15 @@ runs:
       id: version_increase
       if: ${{ github.event_name == 'push' }}
       run: |
-        source ./src/logging.sh
-        source ./src/utils.sh
-        source ./src/git.sh
-        source ./src/github.sh
-        source ./src/version.sh
+        source $GITHUB_ACTION_PATH/src/logging.sh
+        source $GITHUB_ACTION_PATH/src/utils.sh
+        source $GITHUB_ACTION_PATH/src/git.sh
+        source $GITHUB_ACTION_PATH/src/github.sh
+        source $GITHUB_ACTION_PATH/src/version.sh
 
-        source ./src/package_version_detect.sh
-        source ./src/package_version_update.sh
-        source ./src/project.sh
+        source $GITHUB_ACTION_PATH/src/package_version_detect.sh
+        source $GITHUB_ACTION_PATH/src/package_version_update.sh
+        source $GITHUB_ACTION_PATH/src/project.sh
 
         increase_workspaces_versions \
           --workspaces-info "${{ steps.ws_prerequisites.outputs.changed_workspaces_info }}" \
@@ -98,14 +98,14 @@ runs:
         GH_TOKEN: ${{ inputs.github_token }}
       if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
       run: |
-        source ./src/logging.sh
-        source ./src/utils.sh
-        source ./src/github.sh
-        source ./src/git.sh
+        source $GITHUB_ACTION_PATH/src/logging.sh
+        source $GITHUB_ACTION_PATH/src/utils.sh
+        source $GITHUB_ACTION_PATH/src/github.sh
+        source $GITHUB_ACTION_PATH/src/git.sh
 
-        source ./src/package_version_detect.sh
-        source ./src/package_version_update.sh
-        source ./src/project.sh
+        source $GITHUB_ACTION_PATH/src/package_version_detect.sh
+        source $GITHUB_ACTION_PATH/src/package_version_update.sh
+        source $GITHUB_ACTION_PATH/src/project.sh
 
         git_setup_user
 
@@ -121,14 +121,14 @@ runs:
       id: push_new_version
       if: ${{ github.event_name == 'push' && steps.ws_prerequisites.outputs.changed_workspaces_info != steps.version_increase.outputs.updated_workspaces_info }}
       run: |
-        source ./src/logging.sh
-        source ./src/utils.sh
-        source ./src/github.sh
-        source ./src/git.sh
+        source $GITHUB_ACTION_PATH/src/logging.sh
+        source $GITHUB_ACTION_PATH/src/utils.sh
+        source $GITHUB_ACTION_PATH/src/github.sh
+        source $GITHUB_ACTION_PATH/src/git.sh
 
-        source ./src/package_version_detect.sh
-        source ./src/package_version_update.sh
-        source ./src/project.sh
+        source $GITHUB_ACTION_PATH/src/package_version_detect.sh
+        source $GITHUB_ACTION_PATH/src/package_version_update.sh
+        source $GITHUB_ACTION_PATH/src/project.sh
 
         set -ex
 
@@ -176,14 +176,14 @@ runs:
       id: git_create_tag
       if: ${{ github.event_name == 'push' && contains(steps.git_prerequisites.outputs.commit_message, inputs.version_message) }}
       run: |
-        source ./src/logging.sh
-        source ./src/utils.sh
-        source ./src/github.sh
-        source ./src/git.sh
+        source $GITHUB_ACTION_PATH/src/logging.sh
+        source $GITHUB_ACTION_PATH/src/utils.sh
+        source $GITHUB_ACTION_PATH/src/github.sh
+        source $GITHUB_ACTION_PATH/src/git.sh
 
-        source ./src/package_version_detect.sh
-        source ./src/package_version_update.sh
-        source ./src/project.sh
+        source $GITHUB_ACTION_PATH/src/package_version_detect.sh
+        source $GITHUB_ACTION_PATH/src/package_version_update.sh
+        source $GITHUB_ACTION_PATH/src/project.sh
 
         git_setup_user
 
