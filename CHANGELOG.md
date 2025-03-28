@@ -1,3 +1,8 @@
+## [1.1.23] - 2025-03-28
+
+### 🔧 Chore
+
+- b0ab974: action path is still wrong
 ## [1.1.22] - 2025-03-28
 
 ### 🔧 Chore
